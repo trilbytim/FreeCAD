@@ -177,6 +177,8 @@ def get_default_solver():
         solver_map[len(solver_map)] = "Mystran"
     if get_binary("Z88", True):
         solver_map[len(solver_map)] = "Z88"
+    if get_binary("CodeAster", True):
+        solver_map[len(solver_map)] = "CodeAster"
     param_group = FreeCAD.ParamGet(_GENERAL_PARAM)
     return solver_map[param_group.GetInt("DefaultSolver", 0)]
 
@@ -290,5 +292,11 @@ _SOLVER_PARAM = {
         param_path=_PARAM_PATH + "Z88",
         use_default="UseStandardZ88Location",
         custom_path="z88BinaryPath",
+    ),
+    "CodeAster": _SolverDlg(
+        default="codeaster",
+        param_path=_PARAM_PATH + "CodeAster",
+        use_default="UseStandardCodeAsterLocation",
+        custom_path="codeasterBinaryPath",
     ),
 }

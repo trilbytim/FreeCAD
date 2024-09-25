@@ -1082,6 +1082,18 @@ class _SolverMystran(CommandManager):
         self.is_active = "with_analysis"
         self.do_activated = "add_obj_on_gui_expand_noset_edit"
 
+class _SolverCodeAster(CommandManager):
+    "The FEM_SolverCodeAster command definition"
+
+    def __init__(self):
+        super().__init__()
+        self.pixmap = "FEM_SolverCodeAster"
+        self.menutext = Qt.QT_TRANSLATE_NOOP("FEM_SolverCodeAster", "Solver Code Aster")
+        self.accel = "S, M"
+        self.tooltip = Qt.QT_TRANSLATE_NOOP("FEM_SolverCodeAster", "Creates a Code Aster FEM solver")
+        self.is_active = "with_analysis"
+        self.do_activated = "add_obj_on_gui_expand_noset_edit"
+
 
 class _SolverRun(CommandManager):
     "The FEM_SolverRun command definition"
@@ -1165,5 +1177,6 @@ FreeCADGui.addCommand("FEM_SolverCalculiX", _SolverCalculix())
 FreeCADGui.addCommand("FEM_SolverControl", _SolverControl())
 FreeCADGui.addCommand("FEM_SolverElmer", _SolverElmer())
 FreeCADGui.addCommand("FEM_SolverMystran", _SolverMystran())
+FreeCADGui.addCommand("FEM_SolverCodeAster", _SolverCodeAster())
 FreeCADGui.addCommand("FEM_SolverRun", _SolverRun())
 FreeCADGui.addCommand("FEM_SolverZ88", _SolverZ88())
