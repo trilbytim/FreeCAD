@@ -776,6 +776,14 @@ def makeSolverCalculix(doc, name="SolverCalculix"):
 
     obj = femsolver.calculix.solver.create(doc, name)
     return obj
+    
+def makeSolverCodeAster(doc, name="SolverCodeAster"):
+    """makeSolverCodeAster(document, [name]):
+    makes a CodeAster solver object"""
+    import femsolver.codeaster.solver
+
+    obj = femsolver.codeaster.solver.create(doc, name)
+    return obj
 
 
 def makeSolverElmer(doc, name="SolverElmer"):

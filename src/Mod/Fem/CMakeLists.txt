@@ -253,6 +253,19 @@ SET(FemSolverCalculix_SRCS
     femsolver/calculix/writer.py
 )
 
+SET(FemSolverCodeAster_SRCS
+    femsolver/codeaster/__init__.py
+    femsolver/codeaster/add_con_fixed.py
+    femsolver/codeaster/add_con_force.py
+    femsolver/codeaster/add_femelement_geometry.py
+    femsolver/codeaster/add_femelement_material.py
+    femsolver/codeaster/add_mesh.py
+    femsolver/codeaster/add_solver_control.py
+    femsolver/codeaster/solver.py
+    femsolver/codeaster/tasks.py
+    femsolver/codeaster/writer.py
+)
+
 SET(FemSolverElmer_SRCS
     femsolver/elmer/__init__.py
     femsolver/elmer/sifio.py
@@ -309,19 +322,6 @@ SET(FemSolverZ88_SRCS
     femsolver/z88/solver.py
     femsolver/z88/tasks.py
     femsolver/z88/writer.py
-)
-
-SET(FemSolverCodeAster_SRCS
-    femsolver/codeaster/__init__.py
-    femsolver/codeaster/add_con_fixed.py
-    femsolver/codeaster/add_con_force.py
-    femsolver/codeaster/add_femelement_geometry.py
-    femsolver/codeaster/add_femelement_material.py
-    femsolver/codeaster/add_mesh.py
-    femsolver/codeaster/add_solver_control.py
-    femsolver/codeaster/solver.py
-    femsolver/codeaster/tasks.py
-    femsolver/codeaster/writer.py
 )
 
 SET(FemTests_SRCS
@@ -399,6 +399,13 @@ SET(FemTestsCcx_SRCS
     femtest/data/calculix/thermomech_bimetal.inp
 )
 
+SET(FemTestsCodeAster_SRCS
+    femtest/data/codeaster/__init__.py
+    femtest/data/codeaster/plate-ORD1.med
+    femtest/data/codeaster/test.export
+    femtest/data/codeaster/testplate.comm
+)
+
 SET(FemTestsElmer_SRCS
     femtest/data/elmer/__init__.py
     femtest/data/elmer/box_static_0_mm.sif
@@ -427,13 +434,6 @@ SET(FemTestsMystran_SRCS
     femtest/data/mystran/ccx_cantilever_faceload.bdf
     femtest/data/mystran/ccx_cantilever_nodeload.bdf
     femtest/data/mystran/mystran_plate.bdf
-)
-
-SET(FemTestsCodeAster_SRCS
-    femtest/data/codeaster/__init__.py
-    femtest/data/codeaster/plate-ORD1.med
-    femtest/data/codeaster/test.export
-    femtest/data/codeaster/testplate.comm
 )
 
 SET(FemTestsOpen_SRCS
@@ -527,7 +527,7 @@ SET(FemAllScripts
     ${FemTestsApp_SRCS}
     ${FemTestsFiles_SRCS}
     ${FemTestsCcx_SRCS}
-    ${FemSolverCodeAster_SRCS}
+    ${FemTestsCodeAster_SRCS}
     ${FemTestsElmer_SRCS}
     ${FemTestsMesh_SRCS}
     ${FemTestsMystran_SRCS}

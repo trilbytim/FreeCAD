@@ -25,7 +25,7 @@ __title__ = "FreeCAD FEM solver object Code Aster"
 __author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
-## @package SolverMystran
+## @package SolverCodeAster
 #  \ingroup FEM
 
 import glob
@@ -57,8 +57,6 @@ class Proxy(solverbase.Proxy):
         super().__init__(obj)
         obj.Proxy = self
 
-        # mystran_prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Mystran")
-
         obj.addProperty("App::PropertyEnumeration", "AnalysisType", "Fem", "Type of the analysis")
         obj.AnalysisType = ANALYSIS_TYPES
         obj.AnalysisType = ANALYSIS_TYPES[0]
@@ -78,7 +76,7 @@ class Proxy(solverbase.Proxy):
         return True
 
     def edit(self, directory):
-        pattern = os.path.join(directory, "*.comm")
+        pattern = os.path.join(directory, "*.export")
         FreeCAD.Console.PrintMessage(f"{pattern}\n")
         f = glob.glob(pattern)[0]
         FemGui.open(f)

@@ -21,8 +21,8 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran Writer"
-__author__ = "Bernd Hahnebach"
+__title__ = "Code Aster Writer"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
@@ -34,12 +34,12 @@ from os.path import join
 import FreeCAD
 
 # we need to import FreeCAD before the non FreeCAD library because of the print
-try:
-    from pyNastran.bdf.bdf import BDF
-except Exception:
-    FreeCAD.Console.PrintError(
-        "Module pyNastran not found. Writing Mystran solver input will not work.\n"
-    )
+#try:
+    #Import any CA specific packages
+#except Exception:
+#    FreeCAD.Console.PrintError(
+#        "Module ...not found.\n"
+#    )
 
 from . import add_mesh
 from . import add_femelement_material
@@ -50,7 +50,7 @@ from . import add_solver_control
 from .. import writerbase
 
 
-class FemInputWriterMystran(writerbase.FemInputWriter):
+class FemInputWriterCodeAster(writerbase.FemInputWriter):
     def __init__(
         self, analysis_obj, solver_obj, mesh_obj, member, dir_name=None, mat_geo_sets=None
     ):
@@ -64,24 +64,23 @@ class FemInputWriterMystran(writerbase.FemInputWriter):
             self.basename = self.mesh_object.Name
         else:
             self.basename = "Mesh"
-        self.solverinput_file = join(self.dir_name, self.basename + ".bdf")
-        self.pynasinput_file = join(self.dir_name, self.basename + ".py")
-        FreeCAD.Console.PrintLog(f"FemInputWriterMystran --> self.dir_name  -->  {self.dir_name}\n")
+        self.solverinput_file = join(self.dir_name, self.basename + ".comm")
+        self.export_file = join(self.dir_name, self.basename + ".export")
+        FreeCAD.Console.PrintLog(f"FemInputWriterCodeAster --> self.dir_name  -->  {self.dir_name}\n")
         FreeCAD.Console.PrintMessage(
-            "FemInputWriterMystra --> self.solverinput_file  -->  {}\n".format(
+            "FemInputWriterCodeAster --> self.solverinput_file  -->  {}\n".format(
                 self.solverinput_file
             )
         )
         FreeCAD.Console.PrintMessage(
-            f"FemInputWriterMystra --> self.pynasf_name  -->  {self.pynasinput_file}\n"
+            "FemInputWriterCodeAster --> self.export_file  -->  {}\n".format(self.export_file)
         )
 
     def write_solver_input(self):
 
         timestart = time.process_time()
 
-        model = BDF()
-
+        """
         pynasf = open(self.pynasinput_file, "w")
 
         # comment and model init
@@ -106,7 +105,7 @@ class FemInputWriterMystran(writerbase.FemInputWriter):
 
         # print(model.get_bdf_stats())
         model.write_bdf(self.solverinput_file, enddata=True)
-
+        """
         writing_time_string = "Writing time input file: {} seconds".format(
             round((time.process_time() - timestart), 2)
         )

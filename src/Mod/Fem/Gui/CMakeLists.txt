@@ -52,6 +52,7 @@ SOURCE_GROUP("Python" FILES ${Python_SRCS})
 
 set(FemGui_UIC_SRCS
     DlgSettingsFemCcx.ui
+    DlgSettingsFemCodeAster.ui
     DlgSettingsFemElmer.ui
     DlgSettingsFemExportAbaqus.ui
     DlgSettingsFemGeneral.ui
@@ -105,6 +106,9 @@ SET(FemGui_DLG_SRCS
     DlgSettingsFemCcx.ui
     DlgSettingsFemCcxImp.cpp
     DlgSettingsFemCcxImp.h
+    DlgSettingsFemCodeAster.ui
+    DlgSettingsFemCodeAsterImp.cpp
+    DlgSettingsFemCodeAsterImp.h
     DlgSettingsFemElmer.ui
     DlgSettingsFemElmerImp.cpp
     DlgSettingsFemElmerImp.h

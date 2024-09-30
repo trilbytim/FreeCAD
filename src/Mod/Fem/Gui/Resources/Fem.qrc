@@ -84,6 +84,7 @@
         <file>icons/FEM_ResultsPurge.svg</file>
 
         <!-- gui command icons: solver -->
+        <file>icons/FEM_SolverCodeAster.svg</file>
         <file>icons/FEM_SolverControl.svg</file>
         <file>icons/FEM_SolverElmer.svg</file>
         <file>icons/FEM_SolverMystran.svg</file>
