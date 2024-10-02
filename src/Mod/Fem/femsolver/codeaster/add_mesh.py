@@ -21,14 +21,13 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran add fem mesh"
-__author__ = "Bernd Hahnebach"
+__title__ = "Code Aster add fem mesh"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
 #  @{
 
-from feminout import exportNastranMesh
 from femmesh import meshtools
 
 

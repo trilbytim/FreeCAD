@@ -68,7 +68,6 @@ class Prepare(run.Prepare):
         self.pushStatus("Preparing solver input...\n")
 
         # get mesh set data
-        # TODO see calculix tasks get mesh set data
         mesh_obj = membertools.get_mesh_to_solve(self.analysis)[0]  # pre check done already
         meshdatagetter = meshsetsgetter.MeshSetsGetter(
             self.analysis,
@@ -79,21 +78,21 @@ class Prepare(run.Prepare):
         meshdatagetter.get_mesh_sets()
 
         # write solver input
-        w = writer.FemInputWriterMystran(
+        w = writer.FemInputWriterCodeAster(
             self.analysis,
             self.solver,
             mesh_obj,
             meshdatagetter.member,
             self.directory,
         )
-        path = w.write_solver_input()
+        commpath, expath = w.write_solver_input()
         # report to user if task succeeded
-        if path != "":
-            self.pushStatus("Writing solver input completed.")
+        if expath != "":
+            self.pushStatus(f"Writing solver input completed at {expath}")
         else:
             self.pushStatus("Writing solver input failed.")
             self.fail()
-        _inputFileName = os.path.splitext(os.path.basename(path))[0]
+        _inputFileName = os.path.splitext(os.path.basename(expath))[0]
 
 
 class Solve(run.Solve):
@@ -101,7 +100,7 @@ class Solve(run.Solve):
     def run(self):
         self.pushStatus("Executing solver...\n")
 
-        infile = _inputFileName + ".bdf"
+        infile = _inputFileName + ".export"
 
         # get solver binary
         self.pushStatus("Get solver binary...\n")
@@ -130,8 +129,7 @@ class Results(run.Results):
         prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/General")
         if not prefs.GetBool("KeepResultsOnReRun", False):
             self.purge_results()
-        if result_reading is True:
-            self.load_results()
+        self.load_results()
 
     def purge_results(self):
         self.pushStatus("Purge existing results...\n")
@@ -144,17 +142,12 @@ class Results(run.Results):
 
     def load_results(self):
         self.pushStatus("Import new results...\n")
-        neu_result_file = os.path.join(self.directory, _inputFileName + ".NEU")
-        if os.path.isfile(neu_result_file):
-            hfcMystranNeuIn.import_neu(neu_result_file)
-            # Workaround to move result object into analysis
-            for o in self.analysis.Document.Objects:
-                if o.Name == "Displacement0":
-                    self.analysis.addObject(o)
-                    break
+        result_file = os.path.join(self.directory, _inputFileName + ".rmed")
+        if os.path.isfile(result_file):
+            FreeCAD.Console.PrintMessage(f"FEM: Results found at {result_file}!\n")
         else:
             # TODO: use solver framework status message system
-            FreeCAD.Console.PrintError(f"FEM: No results found at {neu_result_file}!\n")
+            FreeCAD.Console.PrintError(f"FEM: No results found at {result_file}!\n")
             self.fail()
 
 

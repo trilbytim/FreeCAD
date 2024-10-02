@@ -79,39 +79,20 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
     def write_solver_input(self):
 
         timestart = time.process_time()
-
-        """
-        pynasf = open(self.pynasinput_file, "w")
-
-        # comment and model init
-        pynasf.write("# written by FreeCAD\n\n")
-        pynasf.write("from pyNastran.bdf.bdf import BDF\n")
-        pynasf.write("model = BDF()\n\n")
-
-        model = add_mesh.add_mesh(pynasf, model, self)
-        model = add_femelement_material.add_femelement_material(pynasf, model, self)
-        model = add_femelement_geometry.add_femelement_geometry(pynasf, model, self)
-        model = add_con_force.add_con_force(pynasf, model, self)
-        model = add_con_fixed.add_con_fixed(pynasf, model, self)
-        model = add_solver_control.add_solver_control(pynasf, model, self)
-
-        pynasf.write(
-            "\n\nmodel.write_bdf('{}', enddata=True)\n".format(
-                join(self.dir_name, self.basename + "_pyNas.bdf")
-            )
-        )
-
-        pynasf.close()
-
-        # print(model.get_bdf_stats())
-        model.write_bdf(self.solverinput_file, enddata=True)
-        """
+        commfile = open(self.solverinput_file, 'w')
+        commfile.write("# Code Aster input comm file written from FreeCAD")
+        commfile.close()
+        
+        exfile = open(self.export_file, 'w')
+        exfile.write("# Code Aster export file written from FreeCAD")
+        exfile.close()
+        
         writing_time_string = "Writing time input file: {} seconds".format(
             round((time.process_time() - timestart), 2)
         )
         FreeCAD.Console.PrintMessage(writing_time_string + " \n\n")
 
-        return self.solverinput_file
+        return self.solverinput_file, self.export_file
 
 
 ##  @}
