@@ -1,5 +1,6 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2017 Markus Hovorka <m.hovorka@live.de>                 *
+# *   Copyright (c) 2022 Uwe Stöhr <uwestoehr@lyx.org>                      *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -21,40 +22,31 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran add femelement materials"
-__author__ = "Bernd Hahnebach"
+__title__ = "FreeCAD FEM solver Code Aster equation object Elasticity"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
 #  @{
 
+from femtools import femutils
+from ... import equationbase
 
-from FreeCAD import Units
+
+def create(doc, name="Elasticity"):
+    return femutils.createObject(doc, name, Proxy, ViewProxy)
 
 
-def add_femelement_material(f, model, mystran_writer):
+class Proxy(equationbase.ElasticityProxy):
 
-    # generate pyNastran code
-    # only use the first material object
-    mat_obj = mystran_writer.member.mats_linear[0]["Object"]
-    YM = Units.Quantity(mat_obj.Material["YoungsModulus"])
-    YM_in_MPa = YM.getValueAs("MPa").Value
-    PR = float(mat_obj.Material["PoissonRatio"])
-    #pynas_code = "# mat1 card, material properties for linear isotropic material\n"
-    #pynas_code += f"mat = model.add_mat1(mid=1, E={YM_in_MPa:.1f}, G=None, nu={PR})\n\n\n"
-    #SIMPLE HACK ORTHO MAT
-    pynas_code = "# mat8 card, material properties for orthotropic material\n"
-    pynas_code += f"mat = model.add_mat8(mid=1, e11=float(181000), e22=float(10300), nu12=float(0.28), g12=float(7170),g1z=float(7170), g2z=float(5000), rho=float(1.6e-9))\n\n\n"
+    Type = "Fem::EquationCodeAsterElasticity"
 
-    # write the pyNastran code
-    f.write(pynas_code)
+    def __init__(self, obj):
+        super().__init__(obj)
 
-    # execute pyNastran code to add data to the model
-    # print(model.get_bdf_stats())
-    exec(pynas_code)
-    # print(model.get_bdf_stats())
 
-    return model
+class ViewProxy(equationbase.ElasticityViewProxy):
+    pass
 
 
 ##  @}

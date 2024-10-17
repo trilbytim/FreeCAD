@@ -34,6 +34,7 @@ import os
 import FreeCAD
 
 from . import tasks
+from .equations import elasticity
 from .. import run
 from .. import solverbase
 from femtools import femutils
@@ -52,6 +53,10 @@ class Proxy(solverbase.Proxy):
     """The Fem::FemSolver's Proxy python type, add solver specific properties"""
 
     Type = "Fem::SolverCodeAster"
+    
+    _EQUATIONS = {
+        "Elasticity": elasticity,
+    }
 
     def __init__(self, obj):
         super().__init__(obj)
@@ -71,6 +76,13 @@ class Proxy(solverbase.Proxy):
             results=tasks.Results(),
             testmode=testmode,
         )
+        
+    def createEquation(self, doc, eqId):
+        print('CREATING EQN')
+        return self._EQUATIONS[eqId].create(doc)
+        
+    def isSupported(self, eqId):
+        return eqId in self._EQUATIONS
 
     def editSupported(self):
         return True

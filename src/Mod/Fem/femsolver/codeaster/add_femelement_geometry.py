@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>              *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -21,61 +21,27 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran add femelement geometry"
-__author__ = "Bernd Hahnebach"
+__title__ = "Code Aster add femelement geometry"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
 #  @{
 
-
-def add_femelement_geometry(f, model, mystran_writer):
-
-    # generate pyNastran code
-    # HACK, the if statemant needs improvement, see calculix solver
-    if mystran_writer.member.geos_beamsection:
-        beamsec_obj = mystran_writer.member.geos_beamsection[0]["Object"]
-        if beamsec_obj.SectionType == "Rectangular":
-            height = beamsec_obj.RectHeight.getValueAs("mm").Value
-            width = beamsec_obj.RectWidth.getValueAs("mm").Value
-            pynas_code = "# pbarl card, properties of a simple beam element (CBAR entry)\n"
-            pynas_code += "# defined by cross-sectional dimensions\n"
-            pynas_code += f"dim = [{width}, {height}]\n"
-            pynas_code += "model.add_pbarl(pid=1, mid=1, Type={}, dim=dim, nsm=0.0)\n".format(
-                '"BAR"'
-            )
-            pynas_code += "# pbarl.validate()\n\n\n"
-        else:
-            return
-    elif mystran_writer.member.geos_shellthickness:
+def add_femelement_geometry(commtxt, ca_writer):
+    commtxt += "# Geometric properties of element\n"
+    if ca_writer.member.geos_beamsection:
+        FreeCAD.Console.PrintMessage("Beams not yet supported for Code Aster")
+    elif ca_writer.member.geos_shellthickness:
         # only use the first shellthickness object
-        shellth_obj = mystran_writer.member.geos_shellthickness[0]["Object"]
+        shellth_obj = ca_writer.member.geos_shellthickness[0]["Object"]
         thickness = shellth_obj.Thickness.getValueAs("mm").Value
-        pynas_code = "# pshell card, thin shell element properties\n"
-        pynas_code += "model.add_pshell(pid=1, mid1=1, t={}, mid2=1, mid3=1)\n\n\n".format(
-            thickness
-        )
-    else:
-        pynas_code = "# psolid card, defines solid element\n"
-        pynas_code += "model.add_psolid(pid=1, mid=1)\n\n\n"
+        commtxt += "# Shell elements detected, thickness {}mm\n".format(thickness)
+        commtxt += "elemprop = AFFE_CARA_ELEM(identifier='2:1',\n"
+        commtxt += "                          COQUE=_F(EPAIS={},\n".format(thickness)
+        commtxt += "                                   GROUP_MA=('face', )),\n" # TODO need to work out how to assign to correct group of elements
+        commtxt += "                          MODELE=model)\n\n"
 
-    # write the pyNastran code
-    f.write(pynas_code)
-
-    # execute pyNastran code to add data to the model
-    # print(model.get_bdf_stats())
-    exec(pynas_code)
-    # print(model.get_bdf_stats())
-
-    return model
-
-
-pynas_code = """
-# pshell card, thin shell element properties
-model.add_pshell(1, mid1=1, t=0.3, mid2=1, mid3=1)
-
-
-"""
-
+    return commtxt
 
 ##  @}

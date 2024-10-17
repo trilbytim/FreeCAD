@@ -677,11 +677,20 @@ def makeEquationDeformation(doc, base_solver=None, name="Deformation"):
 def makeEquationElasticity(doc, base_solver=None, name="Elasticity"):
     """makeEquationElasticity(document, [base_solver], [name]):
     creates a FEM elasticity equation for a solver"""
-    from femsolver.elmer.equations import elasticity
-
-    obj = elasticity.create(doc, name)
-    if base_solver:
+    from femsolver.elmer.equations import elasticity as elasticityElm
+    from femsolver.codeaster.equations import elasticity as elasticityCA
+    
+    print('MAKE EQN', base_solver, base_solver.Label)
+    if 'Elmer' in base_solver.Label:
+        obj = elasticityElm.create(doc, name)
+        print('MAKE EQN ELMER', base_solver, base_solver.Label,obj)
         base_solver.addObject(obj)
+    elif 'Aster' in base_solver.Label:
+        obj = elasticityCA.create(doc, name)
+        print('MAKE EQN CA', base_solver, base_solver.Label,obj)
+        base_solver.addObject(obj)
+    else:
+        obj = None
     return obj
 
 

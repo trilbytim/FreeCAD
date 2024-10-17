@@ -33,6 +33,7 @@ string to identify the solver in question. At the moment the following solvers
 are supported:
 
     - Calculix
+    - Code Aster
     - ElmerSolver
     - Mystran
     - Z88
@@ -276,7 +277,7 @@ _SOLVER_PARAM = {
         custom_path="ccxBinaryPath",
     ),
     "CodeAster": _SolverDlg(
-        default="codeaster",
+        default="run_aster",
         param_path=_PARAM_PATH + "CodeAster",
         use_default="UseStandardCodeAsterLocation",
         custom_path="codeasterBinaryPath",

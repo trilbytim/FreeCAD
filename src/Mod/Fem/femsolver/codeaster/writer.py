@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>              *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -57,20 +57,18 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         writerbase.FemInputWriter.__init__(
             self, analysis_obj, solver_obj, mesh_obj, member, dir_name, mat_geo_sets
         )
-        # basename (only for implementation purpose later delete this code
-        # the mesh should never be None for Calculix solver
-        # working dir and input file
+
         if self.mesh_object is not None:
             self.basename = self.mesh_object.Name
         else:
             self.basename = "Mesh"
         self.solverinput_file = join(self.dir_name, self.basename + ".comm")
         self.export_file = join(self.dir_name, self.basename + ".export")
+        self.IPmesh_file = join(self.dir_name, self.basename + ".med")
+        self.OPmesh_file = join(self.dir_name, self.basename + ".rmed")
         FreeCAD.Console.PrintLog(f"FemInputWriterCodeAster --> self.dir_name  -->  {self.dir_name}\n")
         FreeCAD.Console.PrintMessage(
-            "FemInputWriterCodeAster --> self.solverinput_file  -->  {}\n".format(
-                self.solverinput_file
-            )
+            "FemInputWriterCodeAster --> self.solverinput_file  -->  {}\n".format(self.solverinput_file)
         )
         FreeCAD.Console.PrintMessage(
             "FemInputWriterCodeAster --> self.export_file  -->  {}\n".format(self.export_file)
@@ -79,12 +77,33 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
     def write_solver_input(self):
 
         timestart = time.process_time()
+        commtxt = "# Code Aster input comm file written from FreeCAD\n"
+        commtxt += "DEBUT(LANG='EN')\n\n"
+        commtxt += "mesh = LIRE_MAILLAGE(identifier='0:1', UNITE=20)\n\n"
+        commtxt += "model = AFFE_MODELE(identifier='1:1',\n"
+        commtxt += "                    AFFE=_F(MODELISATION='DST',\n"
+        commtxt += "                            PHENOMENE='MECANIQUE',\n"
+        commtxt += "                            TOUT='OUI'),\n"
+        commtxt += "                    MAILLAGE=mesh)\n\n"
+        commtxt = add_femelement_geometry.add_femelement_geometry(commtxt, self)
+        commtxt += "FIN()\n"
+
         commfile = open(self.solverinput_file, 'w')
-        commfile.write("# Code Aster input comm file written from FreeCAD")
+        commfile.write(commtxt)
         commfile.close()
         
         exfile = open(self.export_file, 'w')
-        exfile.write("# Code Aster export file written from FreeCAD")
+        exfile.write("# Code Aster export file written from FreeCAD\n")
+        exfile.write("P actions make_etude\n")
+        exfile.write("P lang en\n")
+        exfile.write("P version stable\n")
+        exfile.write("A args \n")
+        exfile.write("A memjeveux 2000.0\n")
+        exfile.write("A tpmax 900.0\n")
+        exfile.write("F comm {} D  1\n".format(self.solverinput_file))
+        exfile.write("F mmed {} D  20\n".format(self.IPmesh_file))
+        exfile.write("F rmed {} R  80\n".format(self.OPmesh_file))
+        exfile.write("F mess ./message R  6\n")
         exfile.close()
         
         writing_time_string = "Writing time input file: {} seconds".format(

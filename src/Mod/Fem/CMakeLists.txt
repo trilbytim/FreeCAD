@@ -266,6 +266,12 @@ SET(FemSolverCodeAster_SRCS
     femsolver/codeaster/writer.py
 )
 
+SET(FemSolverCodeAsterEquations_SRCS
+    femsolver/codeaster/equations/__init__.py
+    femsolver/codeaster/equations/elasticity.py
+    femsolver/codeaster/equations/elasticity_writer.py
+)
+
 SET(FemSolverElmer_SRCS
     femsolver/elmer/__init__.py
     femsolver/elmer/sifio.py
@@ -518,6 +524,7 @@ SET(FemAllScripts
     ${FemSolver_SRCS}
     ${FemSolverCalculix_SRCS}
     ${FemSolverCodeAster_SRCS}
+    ${FemSolverCodeAsterEquations_SRCS}
     ${FemSolverElmer_SRCS}
     ${FemSolverElmerEquations_SRCS}
     ${FemSolverFenics_SRCS}
@@ -559,6 +566,7 @@ INSTALL(FILES ${FemResult_SRCS} DESTINATION Mod/Fem/femresult)
 INSTALL(FILES ${FemSolver_SRCS} DESTINATION Mod/Fem/femsolver)
 INSTALL(FILES ${FemSolverCalculix_SRCS} DESTINATION Mod/Fem/femsolver/calculix)
 INSTALL(FILES ${FemSolverCodeAster_SRCS} DESTINATION Mod/Fem/femsolver/codeaster)
+INSTALL(FILES ${FemSolverCodeAsterEquations_SRCS} DESTINATION Mod/Fem/femsolver/codeaster/equations)
 INSTALL(FILES ${FemSolverElmer_SRCS} DESTINATION Mod/Fem/femsolver/elmer)
 INSTALL(FILES ${FemSolverElmerEquations_SRCS} DESTINATION Mod/Fem/femsolver/elmer/equations)
 INSTALL(FILES ${FemSolverFenics_SRCS} DESTINATION Mod/Fem/femsolver/fenics)

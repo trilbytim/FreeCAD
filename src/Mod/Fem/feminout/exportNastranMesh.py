@@ -40,9 +40,9 @@ except Exception:
     )
 
 from FreeCAD import Console
-
+from FreeCAD import Vector
 from femmesh import meshtools
-
+import numpy as np
 
 # ************************************************************************************************
 # ********* generic FreeCAD export methods *******************************************************
@@ -106,11 +106,14 @@ def write(fem_mesh, filename):
     # write Nastran mesh file
     model.write_bdf(filename, enddata=True)  # TODO FIXME "BEGIN BULK" is missing
 
-
 def get_pynastran_mesh(
     femnodes_mesh,
     femelement_table,
     export_element_type,
+    ref_dirn = Vector(1,0,0),
+    mids = [1,1,1],
+    thicknesses=[0.33,0.33,0.33],
+    base_thetas = [45,0,45]
 ):
     if export_element_type is None:
         Console.PrintError("Error: wrong export_element_type.\n")
@@ -127,6 +130,7 @@ def get_pynastran_mesh(
     # Nastran seems to have the same node order as SMESH (FreeCAD) has
     # thus just write the nodes at once
     pynas_elements = "# elements cards\n"
+    orientations={}
     for element in femelement_table:
         nodes = femelement_table[element]
         # print(element)  #  eleid
@@ -141,6 +145,23 @@ def get_pynastran_mesh(
                     nodes=nodes,
                     orientation_vec="x=[0.0, 0.0, 1.0]",
                     gnull="g0=None",
+                )
+            )
+        elif export_element_type == "ctria3":
+            A, B, C = femnodes_mesh[nodes[0]], femnodes_mesh[nodes[1]], femnodes_mesh[nodes[2]]
+            AB = B-A
+            BC = C-B
+            ref_dirn = Vector(1,0,0)
+            n = AB.cross(BC)
+            ref_inplane = n.cross(ref_dirn)
+            orientation =vecAngle(ref_dirn, AB, 3)
+            orientations[element] = orientation
+            pynas_elements += (
+                "model.add_{ele_keyword}(eid={eid}, pid={pid}, nids={nodes})\n".format(
+                    ele_keyword=export_element_type,
+                    eid=element,
+                    pid=element,
+                    nodes=nodes
                 )
             )
         else:
@@ -170,14 +191,35 @@ def get_pynastran_mesh(
                 ele_keyword=ele_keyword, eid=element, pid=1, nodes=the_nodes
             )
     # print(pynas_elements)
+    
+    pynas_layups = "# layup cards\n"
+    for o in orientations:
+        thetas =[]
+        for bt in base_thetas:
+            thetas.append(float(bt+orientations[o]))
+        pynas_layups += (
+             "model.add_pcomp(pid={pid}, mids={mids}, thicknesses={thicknesses}, thetas={thetas})\n".format(
+                 pid = o,
+                 mids = mids,
+                 thicknesses = thicknesses,
+                 thetas = thetas
+             )
+        )
 
-    mesh_pynas_code = f"{pynas_nodes}\n\n{pynas_elements}\n\n"
+    mesh_pynas_code = f"{pynas_nodes}\n\n{pynas_elements}\n\n{pynas_layups}\n\n"
     return mesh_pynas_code
 
 
 # Helper
 def get_export_element_type(femmesh, femelement_table=None):
     return nastran_ele_types[meshtools.get_femmesh_eletype(femmesh, femelement_table)]
+
+def vecAngle(A,B, dp=False):
+    ang = np.degrees(np.arccos(A.dot(B)/(A.Length*B.Length)))
+    if dp:
+        return round(ang, dp)
+    else:
+        return ang
 
 
 nastran_ele_types = {
