@@ -36,11 +36,17 @@ def add_femelement_geometry(commtxt, ca_writer):
         # only use the first shellthickness object
         shellth_obj = ca_writer.member.geos_shellthickness[0]["Object"]
         thickness = shellth_obj.Thickness.getValueAs("mm").Value
-        commtxt += "# Shell elements detected, thickness {}mm\n".format(thickness)
-        commtxt += "elemprop = AFFE_CARA_ELEM(identifier='2:1',\n"
-        commtxt += "                          COQUE=_F(EPAIS={},\n".format(thickness)
-        commtxt += "                                   GROUP_MA=('face', )),\n" # TODO need to work out how to assign to correct group of elements
-        commtxt += "                          MODELE=model)\n\n"
+        geoms =[]
+        for ref in shellth_obj.References: #TODO: work out how to create group of all elements and apply to that in case where len(shellth_obj.References) == 0.
+            for geom in ref[1]:
+                commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thickness, (ref,geom))
+                commtxt += "elemprop = AFFE_CARA_ELEM(identifier='2:1',\n"
+                commtxt += "                          COQUE=_F(EPAIS={},\n".format(thickness)
+                commtxt += "                                   GROUP_MA=('{}', )),\n".format(geom)
+                commtxt += "                          MODELE=model)\n\n"
+                geoms.append(geom)
+        
+        ca_writer.tools.group_elements = {g: [g] for g in geoms}
 
     return commtxt
 

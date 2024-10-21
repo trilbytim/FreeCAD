@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>              *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -21,49 +21,32 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran add fixed constraint"
-__author__ = "Bernd Hahnebach"
+__title__ = "Code Aster add fixed constraint"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
 #  @{
 
 
-def add_con_fixed(f, model, mystran_writer):
+def add_con_fixed(commtxt, ca_writer):
 
-    # generate pyNastran code
-    # spc1 card
-    spc_ids = []
-    fixed_code = "# spc1 card, Defines a set of single-point constraints\n"
-    for i, femobj in enumerate(mystran_writer.member.cons_fixed):
-
-        conid = i + 2  # 1 will be the conid of the spcadd card
-        spc_ids.append(conid)
+    commtxt += "# Adding fixed constraints\n"
+    for i, femobj in enumerate(ca_writer.member.cons_fixed):
         fixed_obj = femobj["Object"]
-        # print(fixed_obj.Name)
-        fixed_code += f"# {fixed_obj.Name}\n"
-        # node set
-        fixed_code += "nodes_{} = {}\n".format(fixed_obj.Name, femobj["Nodes"])
-        # all nodes in one line may be to long ... FIXME
-        fixed_code += "model.add_spc1(conid={}, components={}, nodes=nodes_{})\n\n".format(
-            conid, "123456", fixed_obj.Name
-        )
-
-    # spcadd card
-    spcadd_code = "# spcadd card, Single-Point Constraint Set Combination from SPC or SPC1 cards\n"
-    spcadd_code += f"model.add_spcadd(conid=1, sets={spc_ids})\n\n"
-
-    pynas_code = f"{fixed_code}\n{spcadd_code}"
-    # print(pynas_code)
-
-    # write the pyNastran code
-    f.write(pynas_code)
-
-    # execute pyNastran code to add data to the model
-    # print(model.get_bdf_stats())
-    exec(pynas_code)
-    # print(model.get_bdf_stats())
-    return model
-
+        print('Fixed constraint: ',i, femobj, ' on: ', fixed_obj.Name)
+        #TODO Need to copy in form add_femelement_geometry
+        
+        commtxt += "fix = AFFE_CHAR_MECA(identifier='5:1',\n"
+        commtxt += "                     DDL_IMPO=_F(DRX=0.0,\n"
+        commtxt += "                                 DRY=0.0,\n"
+        commtxt += "                                 DRZ=0.0,\n"
+        commtxt += "                                 DX=0.0,\n"
+        commtxt += "                                 DY=0.0,\n"
+        commtxt += "                                 DZ=0.0,\n"
+        commtxt += "                                 GROUP_MA=('fixed', )),\n"
+        commtxt += "                     MODELE=model)\n\n"
+        
+    return commtxt
 
 ##  @}

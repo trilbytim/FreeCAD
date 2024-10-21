@@ -407,7 +407,7 @@ class _EquationElasticity(CommandManager):
         self.tooltip = Qt.QT_TRANSLATE_NOOP(
             "FEM_EquationElasticity", "Creates a FEM equation for elasticity (stress)"
         )
-        self.is_active = "with_solver_elmer"
+        self.is_active = "with_solver"
         self.do_activated = "add_obj_on_gui_selobj_expand_noset_edit"
 
 

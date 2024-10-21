@@ -46,7 +46,7 @@
            <cstring>UseStandardCodeAsterLocation</cstring>
           </property>
           <property name="prefPath" stdset="0">
-           <cstring>Mod/Fem/femsolver/codeaster</cstring>
+           <cstring>Mod/Fem/CodeAster</cstring>
           </property>
          </widget>
         </item>

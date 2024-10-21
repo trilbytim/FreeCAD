@@ -48,6 +48,7 @@ from . import add_con_force
 from . import add_con_fixed
 from . import add_solver_control
 from .. import writerbase
+from femmesh import gmshtools
 
 
 class FemInputWriterCodeAster(writerbase.FemInputWriter):
@@ -62,6 +63,7 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
             self.basename = self.mesh_object.Name
         else:
             self.basename = "Mesh"
+        self.tools = gmshtools.GmshTools(self.mesh_object)
         self.solverinput_file = join(self.dir_name, self.basename + ".comm")
         self.export_file = join(self.dir_name, self.basename + ".export")
         self.IPmesh_file = join(self.dir_name, self.basename + ".med")
@@ -79,18 +81,25 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         timestart = time.process_time()
         commtxt = "# Code Aster input comm file written from FreeCAD\n"
         commtxt += "DEBUT(LANG='EN')\n\n"
-        commtxt += "mesh = LIRE_MAILLAGE(identifier='0:1', UNITE=20)\n\n"
+        commtxt = add_mesh.add_mesh(commtxt, self)
         commtxt += "model = AFFE_MODELE(identifier='1:1',\n"
         commtxt += "                    AFFE=_F(MODELISATION='DST',\n"
         commtxt += "                            PHENOMENE='MECANIQUE',\n"
         commtxt += "                            TOUT='OUI'),\n"
         commtxt += "                    MAILLAGE=mesh)\n\n"
         commtxt = add_femelement_geometry.add_femelement_geometry(commtxt, self)
+        commtxt = add_con_fixed.add_con_fixed(commtxt, self)
         commtxt += "FIN()\n"
 
         commfile = open(self.solverinput_file, 'w')
         commfile.write(commtxt)
         commfile.close()
+        
+        # Write updated .geo file into Gmsh folder and write. med file into SolverCodeAster folder
+        self.tools.write_part_file()
+        self.tools.write_geo()
+        self.tools.get_gmsh_command()
+        self.tools.run_gmsh_with_geo()
         
         exfile = open(self.export_file, 'w')
         exfile.write("# Code Aster export file written from FreeCAD\n")

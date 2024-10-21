@@ -1,2 +1,37 @@
 TODO:
-- Work out why reading of binary path from Preferences isn't working (could be related to https://github.com/FreeCAD/FreeCAD/issues/15348) at the moment, make symlink to as_run into build/bin folder and rename as "codeaster"
+- Fix add_femelemt_geometry for if no groups are selected
+- Fix add_con_fixed
+- Do Force, and material cards
+
+Useful code snippets for assigning groups to meshes:
+import tempfile
+from femmesh import gmshtools
+
+unvGmshFd, unvGmshPath = tempfile.mkstemp(suffix=".unv")
+brepFd, brepPath = tempfile.mkstemp(suffix=".brep")
+geoFd, geoPath = tempfile.mkstemp(suffix=".geo")
+os.close(brepFd)
+os.close(geoFd)
+os.close(unvGmshFd)
+
+tools.temp_file_geometry = brepPath
+tools.temp_file_geo = geoPath
+tools.temp_file_mesh = unvGmshPath
+
+mesh = doc.getObject("FEMMeshGmsh")
+conFixed = doc.getObject("ConstraintFixed")
+tools = gmshtools.GmshTools(mesh)
+tools.group_elements = {'fixed': [c] for c in conFixed.References[0][1]}
+geoPath = '/home/timbo/AMRC/WindAll/Scratch-shell-CA/SolverCodeAster/medwriter.geo'
+
+tools.get_tmp_file_paths()
+tools.temp_file_mesh = '/home/timbo/AMRC/WindAll/Scratch-shell-CA/FEMMeshGmsh/Face004_Mesh.med'
+tools.get_dimension()
+tools.get_region_data()
+tools.get_boundary_layer_data()
+
+
+tools.write_part_file()
+tools.write_geo()
+tools.get_gmsh_command()
+tools.run_gmsh_with_geo()

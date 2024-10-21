@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>              *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -31,32 +31,16 @@ __url__ = "https://www.freecad.org"
 from femmesh import meshtools
 
 
-def add_mesh(f, model, mystran_writer):
+def add_mesh(commtxt, ca_writer):
+    ca_writer.tools.get_tmp_file_paths()
+    ca_writer.tools.temp_file_mesh = ca_writer.IPmesh_file
+    ca_writer.tools.get_dimension()
+    ca_writer.tools.get_region_data()
+    ca_writer.tools.get_boundary_layer_data()
+    
+    commtxt += "mesh = LIRE_MAILLAGE(identifier='0:1', UNITE=20)\n\n"
 
-    # needed basic data
-    if not mystran_writer.femnodes_mesh:
-        mystran_writer.femnodes_mesh = mystran_writer.femmesh.Nodes
-    if not mystran_writer.femelement_table:
-        mystran_writer.femelement_table = meshtools.get_femelement_table(mystran_writer.femmesh)
-    mesh_eletype = exportNastranMesh.get_export_element_type(
-        mystran_writer.femmesh, mystran_writer.femelement_table
-    )
-
-    # get the pynas code
-    mesh_pynas_code = exportNastranMesh.get_pynastran_mesh(
-        mystran_writer.femnodes_mesh, mystran_writer.femelement_table, mesh_eletype
-    )
-    # print(mesh_pynas_code)
-
-    # write the pyNastran code
-    f.write(mesh_pynas_code)
-
-    # execute pyNastran code to add grid to the model
-    # print(model.get_bdf_stats())
-    exec(mesh_pynas_code)
-    # print(model.get_bdf_stats())
-
-    return model
+    return commtxt
 
 
 ##  @}
