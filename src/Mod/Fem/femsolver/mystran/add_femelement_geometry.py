@@ -51,13 +51,10 @@ def add_femelement_geometry(f, model, mystran_writer):
         # only use the first shellthickness object
         shellth_obj = mystran_writer.member.geos_shellthickness[0]["Object"]
         thickness = shellth_obj.Thickness.getValueAs("mm").Value
-        #pynas_code = "# pshell card, thin shell element properties\n"
-        #pynas_code += "model.add_pshell(pid=1, mid1=1, t={}, mid2=1, mid3=1)\n\n\n".format(
-        #    thickness
-        #)
-        #HACK, hard coding of shell
-        pynas_code = "# pcomp card, thin shell composite element properties\n"
-        #pynas_code += "model.add_pcomp(pid=1, mids=[1,1,1], thicknesses=[0.33,0.33,0.33], thetas=[float(45),float(45),float(45)])"
+        pynas_code = "# pshell card, thin shell element properties\n"
+        pynas_code += "model.add_pshell(pid=1, mid1=1, t={}, mid2=1, mid3=1)\n\n\n".format(
+            thickness
+        )
     else:
         pynas_code = "# psolid card, defines solid element\n"
         pynas_code += "model.add_psolid(pid=1, mid=1)\n\n\n"
