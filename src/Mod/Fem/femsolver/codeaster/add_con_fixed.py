@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>                     *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -32,21 +32,25 @@ __url__ = "https://www.freecad.org"
 def add_con_fixed(commtxt, ca_writer):
 
     commtxt += "# Adding fixed constraints\n"
+    geoms = []
     for i, femobj in enumerate(ca_writer.member.cons_fixed):
         fixed_obj = femobj["Object"]
         print('Fixed constraint: ',i, femobj, ' on: ', fixed_obj.Name)
-        #TODO Need to copy in form add_femelement_geometry
+        for ref in fixed_obj.References:
+            for geom in ref[1]:
+                geoms.append(geom)
+            ca_writer.fixes.append("fix{}".format(len(ca_writer.fixes)))
+            commtxt += "{} = AFFE_CHAR_MECA(identifier='5:1',\n".format(ca_writer.fixes[0])
+            commtxt += "                     DDL_IMPO=_F(DRX=0.0,\n"
+            commtxt += "                                 DRY=0.0,\n"
+            commtxt += "                                 DRZ=0.0,\n"
+            commtxt += "                                 DX=0.0,\n"
+            commtxt += "                                 DY=0.0,\n"
+            commtxt += "                                 DZ=0.0,\n"
+            commtxt += "                                 GROUP_MA=('{}', )),\n".format(fixed_obj.Name)
+            commtxt += "                     MODELE=model)\n\n"
         
-        commtxt += "fix = AFFE_CHAR_MECA(identifier='5:1',\n"
-        commtxt += "                     DDL_IMPO=_F(DRX=0.0,\n"
-        commtxt += "                                 DRY=0.0,\n"
-        commtxt += "                                 DRZ=0.0,\n"
-        commtxt += "                                 DX=0.0,\n"
-        commtxt += "                                 DY=0.0,\n"
-        commtxt += "                                 DZ=0.0,\n"
-        commtxt += "                                 GROUP_MA=('fixed', )),\n"
-        commtxt += "                     MODELE=model)\n\n"
-        
+        ca_writer.tools.group_elements[fixed_obj.Name] = [g for g in geoms]
     return commtxt
 
 ##  @}

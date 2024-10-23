@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>                     *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -39,15 +39,17 @@ def add_femelement_geometry(commtxt, ca_writer):
         geoms =[]
         for ref in shellth_obj.References: #TODO: work out how to create group of all elements and apply to that in case where len(shellth_obj.References) == 0.
             for geom in ref[1]:
-                commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thickness, (ref,geom))
-                commtxt += "elemprop = AFFE_CARA_ELEM(identifier='2:1',\n"
-                commtxt += "                          COQUE=_F(EPAIS={},\n".format(thickness)
-                commtxt += "                                   GROUP_MA=('{}', )),\n".format(geom)
-                commtxt += "                          MODELE=model)\n\n"
                 geoms.append(geom)
+            ca_writer.elemprops.append("elemprop{}".format(len(ca_writer.elemprops)))
+            commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thickness, (ref[0].Name,geom))
+            commtxt += "{} = AFFE_CARA_ELEM(identifier='2:1',\n".format(ca_writer.elemprops[-1])
+            commtxt += "                          COQUE=_F(EPAIS={},\n".format(thickness)
+            commtxt += "                                   GROUP_MA=('{}', )),\n".format(ref[0].Name)
+            commtxt += "                          MODELE=model)\n\n"
+                
         
-        ca_writer.tools.group_elements = {g: [g] for g in geoms}
-
+            ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
+        
     return commtxt
 
 ##  @}

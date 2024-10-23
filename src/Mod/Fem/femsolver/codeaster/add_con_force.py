@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>                     *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -21,60 +21,36 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran add force constraint"
-__author__ = "Bernd Hahnebach"
+__title__ = "Code Aster add force constraint"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
 #  @{
 
 
-def add_con_force(f, model, mystran_writer):
-
-    # generate pyNastran code
-    # force card
-    scale_factors = []
-    load_ids = []
-    force_code = "# force cards, mesh node loads\n"
-    for i, femobj in enumerate(mystran_writer.member.cons_force):
-
-        sid = i + 2  # 1 will be the id of the load card
-        scale_factors.append(1.0)
-        load_ids.append(sid)
+def add_con_force(commtxt, ca_writer):
+    commtxt += "# Adding force loads\n"
+    geoms = []
+    for i, femobj in enumerate(ca_writer.member.cons_force):
         force_obj = femobj["Object"]
-        # print(force_obj.Name)
-
-        force_code += f"# {force_obj.Name}\n"
         dirvec = femobj["Object"].DirectionVector
-        print(femobj["NodeLoadTable"])
-        for ref_shape in femobj["NodeLoadTable"]:
-            force_code += f"# {ref_shape[0]}\n"
-            for n in sorted(ref_shape[1]):
-                # the loads in ref_shape[1][n] are without unit
-                node_load = ref_shape[1][n]
-                force_code += "model.add_force(sid={}, node={}, mag={}, xyz=({}, {}, {}))\n".format(
-                    sid, n, node_load, dirvec.x, dirvec.y, dirvec.z
-                )
-        force_code += "\n"
-
-    # generate calce factors lists
-    # load card, static load combinations
-    load_code = "model.add_load(sid=1, scale=1.0, scale_factors={}, load_ids={})\n\n\n".format(
-        scale_factors, load_ids
-    )
-
-    pynas_code = f"{force_code}\n{load_code}"
-    # print(pynas_code)
-
-    # write the pyNastran code
-    f.write(pynas_code)
-
-    # execute pyNastran code to add data to the model
-    # print(model.get_bdf_stats())
-    exec(pynas_code)
-    # print(model.get_bdf_stats())
-
-    return model
-
+        F = force_obj.Force.getValueAs('N')
+        dirvec.normalize()
+        print('Force load: ',i, femobj, ' on: ', force_obj.Name, ' of: ', F, ' at: ', dirvec)
+        
+        for ref in force_obj.References:
+            for geom in ref[1]:
+                geoms.append(geom)
+            ca_writer.forces.append("force{}".format(len(ca_writer.forces)))
+            commtxt += "{} = AFFE_CHAR_MECA(identifier='6:1',\n".format(ca_writer.forces[0])
+            commtxt += "                      FORCE_ARETE=_F(FX={},\n".format(F * dirvec.x)
+            commtxt += "                                     FY={},\n".format(F * dirvec.y)
+            commtxt += "                                     FZ={},\n".format(F * dirvec.z)
+            commtxt += "                                     GROUP_MA=('{}', )),\n".format(force_obj.Name)
+            commtxt += "                      MODELE=model)\n\n"
+        
+        ca_writer.tools.group_elements[force_obj.Name] = [g for g in geoms]
+    return commtxt
 
 ##  @}

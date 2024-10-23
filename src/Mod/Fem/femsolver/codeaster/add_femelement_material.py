@@ -1,5 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2021 Bernd Hahnebach <bernd@bimstatik.org>              *
+# *   Copyright (c) 2024 Tim Swait <timswait@gmail.com>                     *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -21,8 +21,8 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "Mystran add femelement materials"
-__author__ = "Bernd Hahnebach"
+__title__ = "Code Aster add femelement materials"
+__author__ = "Tim Swait"
 __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
@@ -32,26 +32,25 @@ __url__ = "https://www.freecad.org"
 from FreeCAD import Units
 
 
-def add_femelement_material(f, model, mystran_writer):
+def add_femelement_material(commtxt, ca_writer):
 
-    # generate pyNastran code
-    # only use the first material object
-    mat_obj = mystran_writer.member.mats_linear[0]["Object"]
+    # only use the first material object TODO allow setting multi materials
+    commtxt += "# Defining materials\n"
+    mat_obj = ca_writer.member.mats_linear[0]["Object"]
     YM = Units.Quantity(mat_obj.Material["YoungsModulus"])
     YM_in_MPa = YM.getValueAs("MPa").Value
     PR = float(mat_obj.Material["PoissonRatio"])
-    pynas_code = "# mat1 card, material properties for linear isotropic material\n"
-    pynas_code += f"mat = model.add_mat1(mid=1, E={YM_in_MPa:.1f}, G=None, nu={PR})\n\n\n"
+    commtxt += "{} = DEFI_MATERIAU(identifier='3:1',\n".format(mat_obj.Name)
+    commtxt += "                    ELAS=_F(E={},\n".format(YM_in_MPa)
+    commtxt += "                            NU={}))\n\n".format(PR)
+    
+    ca_writer.fieldmats.append("fieldmat{}".format(len(ca_writer.fieldmats)))
+    commtxt += "{} = AFFE_MATERIAU(identifier='4:1',\n".format(ca_writer.fieldmats[-1])
+    commtxt += "                         AFFE=_F(MATER=({}, ),\n".format(mat_obj.Name)
+    commtxt += "                                 TOUT='OUI'),\n"
+    commtxt += "                         MAILLAGE=mesh)\n\n"
 
-    # write the pyNastran code
-    f.write(pynas_code)
-
-    # execute pyNastran code to add data to the model
-    # print(model.get_bdf_stats())
-    exec(pynas_code)
-    # print(model.get_bdf_stats())
-
-    return model
+    return commtxt
 
 
 ##  @}

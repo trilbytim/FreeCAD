@@ -237,11 +237,6 @@ class _SolverDlg:
 
         # check if use_default is set to True
         # if True the standard binary path will be overwritten with a user binary path
-        print(self.param_path)
-        print("*******", self.param_group)
-        print([self.use_default, self.param_group.GetBool(self.use_default)])
-        print(self.param_group.__dict__)
-        print("custom path", self.custom_path)
         if self.param_group.GetBool(self.use_default, True) is False:
             binary = self.param_group.GetString(self.custom_path)
             FreeCAD.Console.PrintMessage(f"Solver binary path set to: {binary} \n")

@@ -34,9 +34,7 @@ from femmesh import meshtools
 def add_mesh(commtxt, ca_writer):
     ca_writer.tools.get_tmp_file_paths()
     ca_writer.tools.temp_file_mesh = ca_writer.IPmesh_file
-    ca_writer.tools.get_dimension()
-    ca_writer.tools.get_region_data()
-    ca_writer.tools.get_boundary_layer_data()
+    ca_writer.tools.update_mesh_data()
     
     commtxt += "mesh = LIRE_MAILLAGE(identifier='0:1', UNITE=20)\n\n"
 

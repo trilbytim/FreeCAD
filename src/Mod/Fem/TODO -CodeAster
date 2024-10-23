@@ -26,6 +26,9 @@ geoPath = '/home/timbo/AMRC/WindAll/Scratch-shell-CA/SolverCodeAster/medwriter.g
 
 tools.get_tmp_file_paths()
 tools.temp_file_mesh = '/home/timbo/AMRC/WindAll/Scratch-shell-CA/FEMMeshGmsh/Face004_Mesh.med'
+
+tools.update_mesh_data()
+
 tools.get_dimension()
 tools.get_region_data()
 tools.get_boundary_layer_data()
