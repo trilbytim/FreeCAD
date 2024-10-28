@@ -42,8 +42,7 @@ def add_femelement_geometry(commtxt, ca_writer):
                 geoms.append(geom)
             ca_writer.elemprops.append("elemprop{}".format(len(ca_writer.elemprops)))
             commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thickness, (ref[0].Name,geom))
-            commtxt += "{} = AFFE_CARA_ELEM(identifier='2:1',\n".format(ca_writer.elemprops[-1])
-            commtxt += "                          COQUE=_F(EPAIS={},\n".format(thickness)
+            commtxt += "{} = AFFE_CARA_ELEM(COQUE=_F(EPAIS={},\n".format(ca_writer.elemprops[-1], thickness)
             commtxt += "                                   GROUP_MA=('{}', )),\n".format(ref[0].Name)
             commtxt += "                          MODELE=model)\n\n"
                 

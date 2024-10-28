@@ -43,8 +43,7 @@ def add_con_force(commtxt, ca_writer):
             for geom in ref[1]:
                 geoms.append(geom)
             ca_writer.forces.append("force{}".format(len(ca_writer.forces)))
-            commtxt += "{} = AFFE_CHAR_MECA(identifier='6:1',\n".format(ca_writer.forces[0])
-            commtxt += "                      FORCE_ARETE=_F(FX={},\n".format(F * dirvec.x)
+            commtxt += "{} = AFFE_CHAR_MECA(FORCE_ARETE=_F(FX={},\n".format(ca_writer.forces[0],F * dirvec.x)
             commtxt += "                                     FY={},\n".format(F * dirvec.y)
             commtxt += "                                     FZ={},\n".format(F * dirvec.z)
             commtxt += "                                     GROUP_MA=('{}', )),\n".format(force_obj.Name)

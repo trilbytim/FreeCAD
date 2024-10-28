@@ -40,8 +40,7 @@ def add_con_fixed(commtxt, ca_writer):
             for geom in ref[1]:
                 geoms.append(geom)
             ca_writer.fixes.append("fix{}".format(len(ca_writer.fixes)))
-            commtxt += "{} = AFFE_CHAR_MECA(identifier='5:1',\n".format(ca_writer.fixes[0])
-            commtxt += "                     DDL_IMPO=_F(DRX=0.0,\n"
+            commtxt += "{} = AFFE_CHAR_MECA(DDL_IMPO=_F(DRX=0.0,\n".format(ca_writer.fixes[0])
             commtxt += "                                 DRY=0.0,\n"
             commtxt += "                                 DRZ=0.0,\n"
             commtxt += "                                 DX=0.0,\n"

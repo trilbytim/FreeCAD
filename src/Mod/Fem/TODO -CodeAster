@@ -1,7 +1,25 @@
 TODO:
+- Che
 - Fix add_femelemt_geometry for if no groups are selected
-- Fix add_con_fixed
-- Do Force, and material cards
+- allow multiple groups of materials and element types
+- Add elasticity as proper equation
+- Do med reader
+
+Useful code snippets for med file reading:
+sys.path.append('/home/timbo/anaconda3/lib/python3.12/site-packages')
+import medcoupling as mc
+fname = '/home/timbo/AMRC/WindAll/Scratch-shell-CA/SolverCodeAster/FEMMeshGmsh.rmed'
+OPmesh = mc.ReadMeshFromFile(fname)
+
+#GET NODE COORDS
+nodes = []
+for id in OPmesh.getNodeIdsInUse()[0]:
+    nodes.append(Vector(OPmesh.getCoordinatesOfNode(id[0])))
+    
+#SET MESH NAME
+OPmesh.setName('FEMMeshGmshy')
+mc.WriteUMesh(fname,OPmesh,True)
+
 
 Useful code snippets for assigning groups to meshes:
 import tempfile

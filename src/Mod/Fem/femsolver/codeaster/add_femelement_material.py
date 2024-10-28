@@ -40,8 +40,7 @@ def add_femelement_material(commtxt, ca_writer):
     YM = Units.Quantity(mat_obj.Material["YoungsModulus"])
     YM_in_MPa = YM.getValueAs("MPa").Value
     PR = float(mat_obj.Material["PoissonRatio"])
-    commtxt += "{} = DEFI_MATERIAU(identifier='3:1',\n".format(mat_obj.Name)
-    commtxt += "                    ELAS=_F(E={},\n".format(YM_in_MPa)
+    commtxt += "{} = DEFI_MATERIAU(ELAS=_F(E={},\n".format(mat_obj.Name, YM_in_MPa)
     commtxt += "                            NU={}))\n\n".format(PR)
     
     ca_writer.fieldmats.append("fieldmat{}".format(len(ca_writer.fieldmats)))

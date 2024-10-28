@@ -69,6 +69,7 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         self.tools = gmshtools.GmshTools(self.mesh_object)
         self.solverinput_file = join(self.dir_name, self.basename + ".comm")
         self.export_file = join(self.dir_name, self.basename + ".export")
+        self.geo_file = join(self.dir_name, self.basename + ".geo")
         self.IPmesh_file = join(self.dir_name, self.basename + ".med")
         self.OPmesh_file = join(self.dir_name, self.basename + ".rmed")
         self.elemprops = []
@@ -89,8 +90,7 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         commtxt = "# Code Aster input comm file written from FreeCAD\n"
         commtxt += "DEBUT(LANG='EN')\n\n"
         commtxt = add_mesh.add_mesh(commtxt, self)
-        commtxt += "model = AFFE_MODELE(identifier='1:1',\n" #TODO: find out if identifiers are really necessary 
-        commtxt += "                    AFFE=_F(MODELISATION='DST',\n"
+        commtxt += "model = AFFE_MODELE(AFFE=_F(MODELISATION='DST',\n"
         commtxt += "                            PHENOMENE='MECANIQUE',\n"
         commtxt += "                            TOUT='OUI'),\n"
         commtxt += "                    MAILLAGE=mesh)\n\n"
@@ -98,15 +98,13 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         commtxt = add_femelement_material.add_femelement_material(commtxt,self)
         commtxt = add_con_fixed.add_con_fixed(commtxt, self)
         commtxt = add_con_force.add_con_force(commtxt, self)
-        commtxt += "reslin = MECA_STATIQUE(identifier='7:1',\n"
-        commtxt += "                       CARA_ELEM={},\n".format(self.elemprops[0])
+        commtxt += "reslin = MECA_STATIQUE(CARA_ELEM={},\n".format(self.elemprops[0])
         commtxt += "                       CHAM_MATER={},\n".format(self.fieldmats[0])
         commtxt += "                       EXCIT=(_F(CHARGE={}),\n".format(self.fixes[0])
         commtxt += "                              _F(CHARGE={})),\n".format(self.forces[0])
         commtxt += "                       MODELE=model)\n\n"
 
-        commtxt += "IMPR_RESU(identifier='8:1',\n"
-        commtxt += "          RESU=_F(CARA_ELEM={},\n".format(self.elemprops[0])
+        commtxt += "IMPR_RESU(RESU=_F(CARA_ELEM={},\n".format(self.elemprops[0])
         commtxt += "                  INFO_MAILLAGE='OUI',\n"
         commtxt += "                  MAILLAGE=mesh,\n"
         commtxt += "                  RESULTAT=reslin),\n"
