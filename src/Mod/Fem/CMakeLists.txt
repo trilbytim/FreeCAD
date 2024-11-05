@@ -191,6 +191,7 @@ SET(FemObjects_SRCS
     femobjects/element_rotation1D.py
     femobjects/material_common.py
     femobjects/material_mechanicalnonlinear.py
+    femobjects/material_ortho.py
     femobjects/material_reinforced.py
     femobjects/mesh_boundarylayer.py
     femobjects/mesh_gmsh.py
@@ -622,6 +623,7 @@ SET(FemGuiTaskPanels_SRCS
     femtaskpanels/task_element_geometry2D.py
     femtaskpanels/task_element_rotation1D.py
     femtaskpanels/task_material_common.py
+    femtaskpanels/task_material_ortho.py
     femtaskpanels/task_material_reinforced.py
     femtaskpanels/task_mesh_boundarylayer.py
     femtaskpanels/task_mesh_gmsh.py
@@ -668,6 +670,7 @@ SET(FemGuiViewProvider_SRCS
     femviewprovider/view_element_rotation1D.py
     femviewprovider/view_material_common.py
     femviewprovider/view_material_mechanicalnonlinear.py
+    femviewprovider/view_material_ortho.py
     femviewprovider/view_material_reinforced.py
     femviewprovider/view_mesh_boundarylayer.py
     femviewprovider/view_mesh_gmsh.py

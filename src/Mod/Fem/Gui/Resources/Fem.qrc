@@ -67,6 +67,7 @@
         <!-- gui command icons: materials -->
         <file>icons/FEM_MaterialFluid.svg</file>
         <file>icons/FEM_MaterialMechanicalNonlinear.svg</file>
+        <file>icons/FEM_MaterialOrtho.svg</file>
         <file>icons/FEM_MaterialReinforced.svg</file>
         <file>icons/FEM_MaterialSolid.svg</file>
 
@@ -135,7 +136,7 @@
         <file>ui/InitialPressure.ui</file>
         <file>ui/Magnetization.ui</file>
         <file>ui/Material.ui</file>
-        <file>ui/MaterialReinforcement.ui</file>
+        <file>ui/MaterialOrtho.ui</file>
         <file>ui/MeshBoundaryLayer.ui</file>
         <file>ui/MeshGmsh.ui</file>
         <file>ui/MeshGroup.ui</file>

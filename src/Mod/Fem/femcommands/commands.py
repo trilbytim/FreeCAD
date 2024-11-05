@@ -611,6 +611,20 @@ class _MaterialMechanicalNonlinear(CommandManager):
         FreeCADGui.Selection.clearSelection()
         FreeCAD.ActiveDocument.recompute()
 
+class _MaterialOrtho(CommandManager):
+    "The FEM_MaterialOrtho command definition"
+
+    def __init__(self):
+        super().__init__()
+        self.menutext = Qt.QT_TRANSLATE_NOOP(
+            "FEM_MaterialOrtho", "Orthotropic material"
+        )
+        self.tooltip = Qt.QT_TRANSLATE_NOOP(
+            "FEM_MaterialOrtho",
+            "Creates a material for an orthotropic material such as polymer composite",
+        )
+        self.is_active = "with_analysis"
+        self.do_activated = "add_obj_on_gui_set_edit"
 
 class _MaterialReinforced(CommandManager):
     "The FEM_MaterialReinforced command definition"

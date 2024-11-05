@@ -415,6 +415,7 @@ SET(FemGuiPythonUI_SRCS
     Resources/ui/InitialPressure.ui
     Resources/ui/Magnetization.ui
     Resources/ui/Material.ui
+    Resources/ui/MaterialOrtho.ui
     Resources/ui/MaterialReinforcement.ui
     Resources/ui/MeshBoundaryLayer.ui
     Resources/ui/MeshGmsh.ui

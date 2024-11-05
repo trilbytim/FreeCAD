@@ -436,6 +436,18 @@ def makeMaterialMechanicalNonlinear(doc, base_material, name="MaterialMechanical
         view_material_mechanicalnonlinear.VPMaterialMechanicalNonlinear(obj.ViewObject)
     return obj
 
+def makeMaterialOrtho(doc, name="MaterialOrtho"):
+    """makeMaterialOrtho(document):
+    creates an orthotropic material object"""
+    obj = doc.addObject("App::MaterialObjectPython", name)
+    from femobjects import material_ortho
+
+    material_ortho.MaterialOrtho(obj)
+    if FreeCAD.GuiUp:
+        from femviewprovider import view_material_ortho
+
+        view_material_ortho.VPMaterialOrtho(obj.ViewObject)
+    return obj
 
 def makeMaterialReinforced(doc, name="MaterialReinforced"):
     """makeMaterialReinforced(document, [matrix_material], [reinforcement_material], [name]):
