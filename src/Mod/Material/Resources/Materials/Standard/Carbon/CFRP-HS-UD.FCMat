@@ -4,7 +4,7 @@ General:
   UUID: "19483e7e-62e3-42f3-818a-18e919d5b7a8"
   Name: "CFRP-HS-UD"
   Author: "Tim Swait"
-  License: "All rights reserved"
+  License: "CC-BY-4.0"
   Description: "Generic unidirectional HS (High Strength) grade Carbon Fibre Reinforced Epoxy Composite."
 Models:
   Orthotropic Linear Elastic:
