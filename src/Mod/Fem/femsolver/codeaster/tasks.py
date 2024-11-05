@@ -33,10 +33,7 @@ import os.path
 import subprocess
 
 import FreeCAD
-
-
-
-
+import ObjectsFem
 
 from . import writer
 from .. import run
@@ -44,6 +41,7 @@ from .. import settings
 from femmesh import meshsetsgetter
 from femtools import femutils
 from femtools import membertools
+from feminout import importMedResults
 
 
 _inputFileName = None
@@ -133,7 +131,6 @@ class Results(run.Results):
 
     def purge_results(self):
         self.pushStatus("Purge existing results...\n")
-        # TODO see calculix result tasks
         for m in membertools.get_member(self.analysis, "Fem::FemResultObject"):
             if femutils.is_of_type(m.Mesh, "Fem::MeshResult"):
                 self.analysis.Document.removeObject(m.Mesh.Name)
@@ -144,9 +141,15 @@ class Results(run.Results):
         self.pushStatus("Import new results...\n")
         result_file = os.path.join(self.directory, _inputFileName + ".rmed")
         if os.path.isfile(result_file):
-            FreeCAD.Console.PrintMessage(f"FEM: Results found at {result_file}!\n")
+            #FreeCAD.Console.PrintMessage(f"FEM: Results found at {result_file}!\n")
+            mesh = importMedResults.read_med_mesh(result_file)
+            results_name = 'CodeAsterResults'
+            res_obj = ObjectsFem.makeResultMechanical(self.analysis.Document, results_name)
+            result_mesh_object = ObjectsFem.makeMeshResult(self.analysis.Document, results_name + "_Mesh")
+            result_mesh_object.FemMesh = mesh
+            res_obj.Mesh = result_mesh_object
+            self.analysis.addObject(res_obj)
         else:
-            # TODO: use solver framework status message system
             FreeCAD.Console.PrintError(f"FEM: No results found at {result_file}!\n")
             self.fail()
 
