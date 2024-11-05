@@ -956,7 +956,7 @@ def export(exportList,filename):
     # get all children and reorder list to get buildings and floors processed first
     objectslist = Draft.get_group_contents(exportList, walls=True,
                                            addgroups=True)
-    objectslist = Arch.pruneIncluded(objectslist)
+    objectslist = Arch.pruneIncluded(objectslist, strict=True)
 
     sites = []
     buildings = []
@@ -1793,7 +1793,6 @@ def explorer(filename,schema="IFC2X3_TC1.exp"):
     tree.headerItem().setText(1, "")
     tree.headerItem().setText(2, "Item and Properties")
     bold = QtGui.QFont()
-    bold.setWeight(75)
     bold.setBold(True)
 
     #print(ifc.Entities)
