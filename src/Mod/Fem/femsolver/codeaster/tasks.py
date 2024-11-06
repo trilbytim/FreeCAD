@@ -42,7 +42,7 @@ from femmesh import meshsetsgetter
 from femtools import femutils
 from femtools import membertools
 from feminout import importMedResults
-
+from feminout import importToolsFem
 
 _inputFileName = None
 
@@ -143,11 +143,13 @@ class Results(run.Results):
         if os.path.isfile(result_file):
             #FreeCAD.Console.PrintMessage(f"FEM: Results found at {result_file}!\n")
             mesh = importMedResults.read_med_mesh(result_file)
+            result_set = importMedResults.read_med_result(result_file)
             results_name = 'CodeAsterResults'
             res_obj = ObjectsFem.makeResultMechanical(self.analysis.Document, results_name)
             result_mesh_object = ObjectsFem.makeMeshResult(self.analysis.Document, results_name + "_Mesh")
             result_mesh_object.FemMesh = mesh
             res_obj.Mesh = result_mesh_object
+            res_obj = importToolsFem.fill_femresult_mechanical(res_obj, result_set)
             self.analysis.addObject(res_obj)
         else:
             FreeCAD.Console.PrintError(f"FEM: No results found at {result_file}!\n")

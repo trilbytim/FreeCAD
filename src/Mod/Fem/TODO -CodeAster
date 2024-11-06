@@ -16,6 +16,19 @@ nodes = []
 for id in OPmesh.getNodeIdsInUse()[0]:
     nodes.append(Vector(OPmesh.getCoordinatesOfNode(id[0])))
     
+# Read Field  data
+m = mc.ReadMeshFromFile(medfile)
+field0 = mc.GetAllFieldNames(medfile)[0]
+print(field0)
+q = mc.ReadField(medfile, field0).getArrays()
+print('q0:', q[0])
+columns = [ q[0].getInfoOnComponent(i) for i in range(q[0].getNumberOfComponents()) ]
+print(columns)
+disp = q[0].toNumPyArray()  # this gets an output we can use
+print(disp)
+
+    
+## GMSH STUFF    
 #SET MESH NAME
 OPmesh.setName('FEMMeshGmshy')
 mc.WriteUMesh(fname,OPmesh,True)

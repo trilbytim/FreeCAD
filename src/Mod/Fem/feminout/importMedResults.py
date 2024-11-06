@@ -77,6 +77,17 @@ def read_med_mesh(medfile):
                                         "Penta6Elem": [],
                                         "Penta15Elem": []})
     return mesh
+
+def read_med_result(medfile):
+    fieldname = mc.GetAllFieldNames(medfile)[0]
+    q = mc.ReadField(medfile, fieldname).getArrays()[0]
+    #columns = [q.getInfoOnComponent(i) for i in range(q.getNumberOfComponents())]
+    disp = {}
+    for i in range(q.getNumberOfTuples()):
+        tup = q.getTuple(i)
+        disp[i+1] = FreeCAD.Vector(tup[0], tup[1], tup[2])
+    result_set = {'disp': disp}
+    return result_set
     
 #m = read_aster_result(fname)
 #mesh = feminout.importToolsFem.make_femmesh(m)
