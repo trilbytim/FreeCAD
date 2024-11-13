@@ -43,7 +43,8 @@ except Exception:
         "Module medcoupling not found. Cannot load med file.\n"
     )
 
-
+import tempfile
+import subprocess
 from . import importToolsFem
 
 fname = "FEMMeshGmsh.rmed"
@@ -88,6 +89,21 @@ def read_med_result(medfile):
         disp[i+1] = FreeCAD.Vector(tup[0], tup[1], tup[2])
     result_set = {'disp': disp}
     return result_set
+    
+def testRead(medfile):
+    '''This function shouldn't need to exist! But for some reason opening a med file for the first time can cause a SEGFAULT, so this does the first opening in a separate process'''
+    returncode = 1
+    i = 0
+    while returncode != 0:
+        print('TEST READ MEDFILE', i)
+        i+=1
+        x = tempfile.NamedTemporaryFile(suffix=".py")
+        x.write(("import medcoupling as mc; mc.ReadMeshFromFile('%s')"%medfile).encode())
+        x.flush()
+        check = subprocess.run(["python", x.name])
+        returncode = check.returncode
+        print('Returncode:',returncode)
+    
     
 #m = read_aster_result(fname)
 #mesh = feminout.importToolsFem.make_femmesh(m)

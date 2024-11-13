@@ -86,9 +86,9 @@ class Prepare(run.Prepare):
         commpath, expath = w.write_solver_input()
         # report to user if task succeeded
         if expath != "":
-            self.pushStatus(f"Writing solver input completed at {expath}")
+            self.pushStatus(f"Writing solver input completed at {expath}\n")
         else:
-            self.pushStatus("Writing solver input failed.")
+            self.pushStatus("Writing solver input failed.\n")
             self.fail()
         _inputFileName = os.path.splitext(os.path.basename(expath))[0]
 
@@ -96,8 +96,6 @@ class Prepare(run.Prepare):
 class Solve(run.Solve):
 
     def run(self):
-        self.pushStatus("Executing solver...\n")
-
         infile = _inputFileName + ".export"
 
         # get solver binary
@@ -142,6 +140,7 @@ class Results(run.Results):
         result_file = os.path.join(self.directory, _inputFileName + ".rmed")
         if os.path.isfile(result_file):
             #FreeCAD.Console.PrintMessage(f"FEM: Results found at {result_file}!\n")
+            importMedResults.testRead(result_file)
             mesh = importMedResults.read_med_mesh(result_file)
             result_set = importMedResults.read_med_result(result_file)
             results_name = 'CodeAsterResults'

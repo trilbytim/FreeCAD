@@ -41,6 +41,7 @@
         <file>icons/FEM_ElementFluid1D.svg</file>
         <file>icons/FEM_ElementGeometry1D.svg</file>
         <file>icons/FEM_ElementGeometry2D.svg</file>
+        <file>icons/FEM_ElementGeometryLaminate.svg</file>
         <file>icons/FEM_ElementRotation1D.svg</file>
         <file>icons/FEM_EquationDeformation.svg</file>
         <file>icons/FEM_EquationElasticity.svg</file>
@@ -129,6 +130,7 @@
         <file>ui/ElementFluid1D.ui</file>
         <file>ui/ElementGeometry1D.ui</file>
         <file>ui/ElementGeometry2D.ui</file>
+        <file>ui/ElementGeometryLaminate.ui</file>
         <file>ui/ElementRotation1D.ui</file>
         <file>ui/FlowVelocity.ui</file>
         <file>ui/InitialFlowVelocity.ui</file>

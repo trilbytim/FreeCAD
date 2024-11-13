@@ -189,6 +189,7 @@ SET(FemObjects_SRCS
     femobjects/element_fluid1D.py
     femobjects/element_geometry1D.py
     femobjects/element_geometry2D.py
+    femobjects/element_geometry_laminate.py
     femobjects/element_rotation1D.py
     femobjects/material_common.py
     femobjects/material_mechanicalnonlinear.py
@@ -621,6 +622,7 @@ SET(FemGuiTaskPanels_SRCS
     femtaskpanels/task_element_fluid1D.py
     femtaskpanels/task_element_geometry1D.py
     femtaskpanels/task_element_geometry2D.py
+    femtaskpanels/task_element_geometry_laminate.py
     femtaskpanels/task_element_rotation1D.py
     femtaskpanels/task_material_common.py
     femtaskpanels/task_material_reinforced.py
@@ -666,6 +668,7 @@ SET(FemGuiViewProvider_SRCS
     femviewprovider/view_element_fluid1D.py
     femviewprovider/view_element_geometry1D.py
     femviewprovider/view_element_geometry2D.py
+    femviewprovider/view_element_geometry_laminate.py
     femviewprovider/view_element_rotation1D.py
     femviewprovider/view_material_common.py
     femviewprovider/view_material_mechanicalnonlinear.py

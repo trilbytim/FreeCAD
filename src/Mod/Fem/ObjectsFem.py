@@ -390,6 +390,20 @@ def makeElementGeometry2D(doc, thickness=1.0, name="ElementGeometry2D"):
 
         view_element_geometry2D.VPElementGeometry2D(obj.ViewObject)
     return obj
+    
+def makeElementGeometryLaminate(doc, thickness=1.0, name="ElementGeometryLaminate"):
+    """makeElementGeometryLaminate(document, [thickness], [name]):
+    creates a laminate geometry element object to define the layup"""
+    obj = doc.addObject("Fem::FeaturePython", name)
+    from femobjects import element_geometry_laminate
+
+    element_geometry_laminate.ElementGeometryLaminate(obj)
+    obj.Thickness = thickness
+    if FreeCAD.GuiUp:
+        from femviewprovider import view_element_geometry_laminate
+
+        view_element_geometry_laminate.VPElementGeometryLaminate(obj.ViewObject)
+    return obj
 
 
 def makeElementRotation1D(doc, name="ElementRotation1D"):

@@ -371,6 +371,18 @@ class _ElementGeometry2D(CommandManager):
         )
         self.is_active = "with_analysis"
         self.do_activated = "add_obj_on_gui_set_edit"
+        
+class _ElementGeometryLaminate(CommandManager):
+    "The FEM_ElementGeometryLaminate command definition"
+
+    def __init__(self):
+        super().__init__()
+        self.menutext = Qt.QT_TRANSLATE_NOOP("FEM_ElementGeometryLaminate", "Shell laminate definition")
+        self.tooltip = Qt.QT_TRANSLATE_NOOP(
+            "FEM_ElementGeometryLaminate", "Creates a FEM shell laminate definition"
+        )
+        self.is_active = "with_analysis"
+        self.do_activated = "add_obj_on_gui_set_edit"
 
 
 class _ElementRotation1D(CommandManager):
@@ -1155,6 +1167,7 @@ FreeCADGui.addCommand("FEM_ConstraintTie", _ConstraintTie())
 FreeCADGui.addCommand("FEM_ElementFluid1D", _ElementFluid1D())
 FreeCADGui.addCommand("FEM_ElementGeometry1D", _ElementGeometry1D())
 FreeCADGui.addCommand("FEM_ElementGeometry2D", _ElementGeometry2D())
+FreeCADGui.addCommand("FEM_ElementGeometryLaminate", _ElementGeometryLaminate())
 FreeCADGui.addCommand("FEM_ElementRotation1D", _ElementRotation1D())
 FreeCADGui.addCommand("FEM_EquationDeformation", _EquationDeformation())
 FreeCADGui.addCommand("FEM_EquationElasticity", _EquationElasticity())

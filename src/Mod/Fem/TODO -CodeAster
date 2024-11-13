@@ -27,6 +27,9 @@ print(columns)
 disp = q[0].toNumPyArray()  # this gets an output we can use
 print(disp)
 
+###!!!!!!NOTE: THIS IS USEFUL!!!!!!!
+q.getMaxValueInArray()  
+
     
 ## GMSH STUFF    
 #SET MESH NAME
