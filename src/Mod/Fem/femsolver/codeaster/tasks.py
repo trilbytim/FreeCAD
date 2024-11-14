@@ -29,7 +29,6 @@ __url__ = "https://www.freecad.org"
 #  @{
 
 import os
-import os.path
 import subprocess
 
 import FreeCAD
@@ -103,6 +102,11 @@ class Solve(run.Solve):
         binary = settings.get_binary("CodeAster")
         if binary is None:
             self.fail()  # a print has been made in settings module
+        # Delete previous result file:
+        result_file = os.path.join(self.directory, _inputFileName + ".rmed")
+        if os.path.isfile(result_file):
+            self.pushStatus("Deleting old result file at {}\n".format(result_file))
+            os.remove(result_file)
 
         # run solver
         self.pushStatus("Executing solver...\n")
@@ -115,9 +119,6 @@ class Solve(run.Solve):
         self.signalAbort.add(self._process.terminate)
         self._process.communicate()
         self.signalAbort.remove(self._process.terminate)
-
-        # for chatching the output see CalculiX or Elmer solver tasks module
-
 
 class Results(run.Results):
 
@@ -139,8 +140,6 @@ class Results(run.Results):
         self.pushStatus("Import new results...\n")
         result_file = os.path.join(self.directory, _inputFileName + ".rmed")
         if os.path.isfile(result_file):
-            #FreeCAD.Console.PrintMessage(f"FEM: Results found at {result_file}!\n")
-            importMedResults.testRead(result_file)
             mesh = importMedResults.read_med_mesh(result_file)
             result_set = importMedResults.read_med_result(result_file)
             results_name = 'CodeAsterResults'
