@@ -3,7 +3,8 @@ TODO:
 - Fix add_femelemt_geometry for if no groups are selected
 - allow multiple groups of materials and element types
 - Add elasticity as proper equation
-- Do med reader
+- Add stress to med reader
+- Make it possible to have materials as children of ElementGeometryLaminate
 
 Useful code snippets for med file reading:
 sys.path.append('/home/timbo/anaconda3/lib/python3.12/site-packages')

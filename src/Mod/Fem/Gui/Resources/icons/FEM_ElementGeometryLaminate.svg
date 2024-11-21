@@ -27,7 +27,7 @@
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
      inkscape:zoom="13.59375"
-     inkscape:cx="28.285057"
+     inkscape:cx="27.549425"
      inkscape:cy="48.257471"
      inkscape:window-width="1920"
      inkscape:window-height="1043"
@@ -63,82 +63,6 @@
          width="1"
          height="2"
          id="rect3769" />
-    </pattern>
-    <pattern
-       inkscape:collect="always"
-       xlink:href="#Packedcircles"
-       id="pattern4850"
-       patternTransform="matrix(1.4079427,0.24510213,-0.26702752,1.5338891,0.44825655,-0.11968938)" />
-    <pattern
-       inkscape:collect="always"
-       patternUnits="userSpaceOnUse"
-       width="1"
-       height="1.73205080756"
-       patternTransform="translate(0,0) scale(10,10)"
-       id="Packedcircles"
-       inkscape:stockid="Packed circles">
-      <circle
-         style="fill:black;stroke:none"
-         cx="0"
-         cy="0.5"
-         r="0.5"
-         id="circle3854" />
-      <circle
-         style="fill:black;stroke:none"
-         cx="1"
-         cy="0.5"
-         r="0.5"
-         id="circle3856" />
-      <circle
-         style="fill:black;stroke:none"
-         cx="0.5"
-         cy="1.36602540378"
-         r="0.5"
-         id="circle3858" />
-      <circle
-         style="fill:black;stroke:none"
-         cx="0.5"
-         cy="-0.366025403784"
-         r="0.5"
-         id="circle3860" />
-    </pattern>
-    <pattern
-       inkscape:collect="always"
-       xlink:href="#Packedcircles-6"
-       id="pattern4850-3"
-       patternTransform="matrix(1.4079427,0.24510213,-0.26702752,1.5338891,0.17737254,7.9823782)" />
-    <pattern
-       inkscape:collect="always"
-       patternUnits="userSpaceOnUse"
-       width="1"
-       height="1.73205080756"
-       patternTransform="translate(0,0) scale(10,10)"
-       id="Packedcircles-6"
-       inkscape:stockid="Packed circles">
-      <circle
-         style="fill:black;stroke:none"
-         cx="0"
-         cy="0.5"
-         r="0.5"
-         id="circle3854-7" />
-      <circle
-         style="fill:black;stroke:none"
-         cx="1"
-         cy="0.5"
-         r="0.5"
-         id="circle3856-5" />
-      <circle
-         style="fill:black;stroke:none"
-         cx="0.5"
-         cy="1.36602540378"
-         r="0.5"
-         id="circle3858-3" />
-      <circle
-         style="fill:black;stroke:none"
-         cx="0.5"
-         cy="-0.366025403784"
-         r="0.5"
-         id="circle3860-5" />
     </pattern>
     <pattern
        inkscape:collect="always"
@@ -273,15 +197,6 @@
        d="m 3,25 34,6 V 45 L 3,39 Z"
        style="display:inline;overflow:visible;visibility:visible;fill:#edd400;fill-opacity:1;fill-rule:evenodd;stroke:#302b00;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate" />
     <path
-       style="fill:none;stroke:url(#pattern4850-3);stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="M 3.1465135,35.96094 37.015464,42.138991"
-       id="path2752-6" />
-    <path
-       style="fill:none;stroke:url(#pattern4850-3-2);stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="M 36.825416,38.177742 60.834167,28.985256"
-       id="path2752-6-9"
-       sodipodi:nodetypes="cc" />
-    <path
        style="display:inline;fill:url(#pattern8216);fill-opacity:1;stroke:#302b00;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
        d="m 2.8214295,25.158579 33.9999995,6 24,-8 -30,-4 z"
        id="path2993-8" />
@@ -307,10 +222,6 @@
        d="M 37.127604,41.892854 61.131549,31.850158"
        id="path2752-6-1-2-2"
        sodipodi:nodetypes="cc" />
-    <path
-       style="fill:none;stroke:url(#pattern4850);stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="M 3.4173978,27.858873 37.286347,34.036924"
-       id="path2752" />
     <path
        style="fill:none;stroke:url(#pattern7246);stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        d="M 2.6892006,31.804691 36.558152,37.982742"

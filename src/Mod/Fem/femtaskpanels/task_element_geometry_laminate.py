@@ -51,9 +51,9 @@ class _TaskPanel(base_femtaskpanel._BaseTaskPanel):
             FreeCAD.getHomePath() + "Mod/Fem/Resources/ui/ElementGeometryLaminate.ui"
         )
         QtCore.QObject.connect(
-            self.parameter_widget.qsb_thickness,
-            QtCore.SIGNAL("valueChanged(Base::Quantity)"),
-            self.thickness_changed,
+            self.parameter_widget.qsb_thicknesses,
+            QtCore.SIGNAL("valueChanged(App::PropertyFloatList)"),
+            self.thicknesses_changed,
         )
         self.init_parameter_widget()
 
@@ -66,7 +66,7 @@ class _TaskPanel(base_femtaskpanel._BaseTaskPanel):
         self.form = [self.parameter_widget, self.selection_widget]
 
     def accept(self):
-        self.obj.Thickness = self.thickness
+        self.obj.Thicknesses = self.thicknesses
         self.obj.References = self.selection_widget.references
         self.selection_widget.finish_selection()
         return super().accept()
@@ -76,11 +76,11 @@ class _TaskPanel(base_femtaskpanel._BaseTaskPanel):
         return super().reject()
 
     def init_parameter_widget(self):
-        self.thickness = self.obj.Thickness
-        FreeCADGui.ExpressionBinding(self.parameter_widget.qsb_thickness).bind(
-            self.obj, "Thickness"
+        self.thicknesses = self.obj.Thicknesses
+        FreeCADGui.ExpressionBinding(self.parameter_widget.qsb_thicknesses).bind(
+            self.obj, "Thicknesses"
         )
-        self.parameter_widget.qsb_thickness.setProperty("value", self.thickness)
+        self.parameter_widget.qsb_thicknesses.setProperty("value", self.thicknesses)
 
-    def thickness_changed(self, base_quantity_value):
-        self.thickness = base_quantity_value
+    def thicknesses_changed(self, alue):
+        self.thicknesses = value

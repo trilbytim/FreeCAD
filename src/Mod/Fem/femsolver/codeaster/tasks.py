@@ -42,6 +42,7 @@ from femtools import femutils
 from femtools import membertools
 from feminout import importMedResults
 from feminout import importToolsFem
+from femresult import resulttools
 
 _inputFileName = None
 
@@ -148,6 +149,7 @@ class Results(run.Results):
             result_mesh_object.FemMesh = mesh
             res_obj.Mesh = result_mesh_object
             res_obj = importToolsFem.fill_femresult_mechanical(res_obj, result_set)
+            res_obj = resulttools.fill_femresult_stats(res_obj)
             self.analysis.addObject(res_obj)
         else:
             FreeCAD.Console.PrintError(f"FEM: No results found at {result_file}!\n")

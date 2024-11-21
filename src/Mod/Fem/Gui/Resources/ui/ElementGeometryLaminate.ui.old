@@ -32,16 +32,28 @@
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
-         <widget class="QLabel" name="l_thicknesses">
+         <widget class="QLabel" name="l_layup">
           <property name="text">
-           <string>List of ply thicknesses:</string>
+           <string>Layup:</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="Gui::InputField" name="qsb_thicknesses">
+         <widget class="Gui::QuantitySpinBox" name="qsb_layup">
+          <property name="unit" stdset="0">
+           <string>mm</string>
+          </property>
           <property name="alignment">
            <set>Qt::AlignLeft|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="singleStep">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="value" stdset="0">
+           <double>0.0000000000000</double>
           </property>
          </widget>
         </item>

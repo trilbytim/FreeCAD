@@ -43,9 +43,15 @@ class ElementGeometryLaminate(base_femelement.BaseFemElement):
         super().__init__(obj)
 
         obj.addProperty(
-            "App::PropertyLength",
-            "Thickness",
-            "ShellThickness",
-            "set thickness of the shell elements",
+            "App::PropertyFloatList", 
+            "Thicknesses", 
+            "Layup",
+            "List of ply thicknesses"
         )
-        obj.setPropertyStatus("Thickness", "LockDynamic")
+        obj.addProperty(
+            "App::PropertyFloatList", 
+            "Orientations", 
+            "Layup",
+            "List of ply orientations (in-plane angles)"
+        )
+        #obj.setPropertyStatus("Layup", "LockDynamic")
