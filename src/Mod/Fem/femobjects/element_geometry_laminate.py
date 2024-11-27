@@ -46,12 +46,18 @@ class ElementGeometryLaminate(base_femelement.BaseFemElement):
             "App::PropertyFloatList", 
             "Thicknesses", 
             "Layup",
-            "List of ply thicknesses"
+            "List of ply thicknesses (thicknesses in mm)"
         )
         obj.addProperty(
             "App::PropertyFloatList", 
             "Orientations", 
             "Layup",
-            "List of ply orientations (in-plane angles)"
+            "List of ply orientations (in-plane angles in degrees)"
+        )
+        obj.addProperty(
+            "App::PropertyMaterialList", 
+            "Materials", 
+            "Layup",
+            "List of materials used (autofills from Materials in Analysis object"
         )
         #obj.setPropertyStatus("Layup", "LockDynamic")

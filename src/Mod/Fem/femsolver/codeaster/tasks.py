@@ -53,7 +53,7 @@ class Check(run.Check):
         self.pushStatus("Checking analysis member...\n")
         self.check_mesh_exists()
         self.check_material_exists()
-        self.check_material_single()  # no multiple material
+        #self.check_material_single()  # TODO: deal better with multiple materials
         self.check_geos_beamsection_single()  # no multiple beamsection
         self.check_geos_shellthickness_single()  # no multiple shellsection
         self.check_geos_beamsection_and_shellthickness()  # either beams or shells

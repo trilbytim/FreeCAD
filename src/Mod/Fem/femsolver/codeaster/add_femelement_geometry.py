@@ -28,18 +28,94 @@ __url__ = "https://www.freecad.org"
 ## \addtogroup FEM
 #  @{
 
+import FreeCAD
+
 def add_femelement_geometry(commtxt, ca_writer):
+    matname = ca_writer.mat_objs[0].Name # Set default material name for cases where no layup is specified
     commtxt += "# Geometric properties of element\n"
     if ca_writer.member.geos_beamsection:
-        FreeCAD.Console.PrintMessage("Beams not yet supported for Code Aster")
+        FreeCAD.Console.PrintError("Beams not yet supported for Code Aster\n")
+        
+    elif ca_writer.member.geos_shelllaminate:
+        # only use the first shelllaminate object
+        shelllam_obj = ca_writer.member.geos_shelllaminate[0]["Object"]
+        mat_objs = ca_writer.mat_objs
+        thicknesses = shelllam_obj.Thicknesses
+        orientations = shelllam_obj.Orientations
+        thicktot = sum(thicknesses)
+        assert len(thicknesses) == len(orientations), "{} ply thicknesses given, {} orientation angles given, these should match (i.e provide one thickness and one angle for every ply".format(len(thicknesses), len(orientations))
+        materials = shelllam_obj.Materials
+        if len(materials) != len(thicknesses):
+            FreeCAD.Console.PrintWarning("Overwriting materials list\n")
+            materials = []
+            matnames = [] # TODO work out better way of naming materials without needing to reference the object, i.e. use a version of the Card Name condensed to remove spaces
+            if len(ca_writer.mat_objs) == 1:
+                FreeCAD.Console.PrintMessage("Single material, {}, applied to all plies\n".format(mat_objs[0].Material['CardName']))
+                for i in range(len(thicknesses)):
+                    materials.append(mat_objs[0].Material)
+                    matnames.append(mat_objs[0].Name)
+            elif len(ca_writer.mat_objs) == len(shelllam_obj.Thicknesses):
+                FreeCAD.Console.PrintMessage("Multiple materials applied to each ply\n")
+                for i in range(len(thicknesses)):
+                    materials.append(ca_writer.mat_objs[i].Material)
+                    matnames.append(mat_objs[i].Name)
+            else:
+                FreeCAD.Console.PrintWarning("Number of materials in analysis more than 1 but not equal to number of plies\n")
+                for i in range(len(thicknesses)):
+                    if i < len(ca_writer.mat_objs)-1:
+                        materials.append(ca_writer.mat_objs[i].Material)
+                        matnames.append(mat_objs[i].Name)
+                    else:
+                        materials.append(ca_writer.mat_objs[-1].Material)
+                        matnames.append(mat_objs[-1].Name)
+
+        geoms =[]
+        i=0
+        for ref in shelllam_obj.References: #TODO: work out how to create group of all elements and apply to that in case where len(shelllam_obj.References) == 0.
+            for geom in ref[1]:
+                geoms.append(geom)
+            matname = "LAYUP"+str(i)
+            i+=1
+            commtxt += "# Composite layup detected, added to shell\n"
+            commtxt += "{} = DEFI_COMPOSITE(COUCHE=(_F(EPAIS={},\n".format(matname,thicknesses[0])
+            commtxt += "                                MATER={},\n".format(matnames[0])
+            commtxt += "                                ORIENTATION = {}),\n".format(orientations[0])
+            for j in range(1,len(thicknesses)):
+                commtxt += "                               _F(EPAIS={},\n".format(thicknesses[j])
+                commtxt += "                                MATER={},\n".format(matnames[j])
+                commtxt += "                                ORIENTATION = {}),\n".format(orientations[j])
+            commtxt += "                                ))\n\n"
+            
+            ca_writer.elemprops.append("elemprop{}".format(len(ca_writer.elemprops)))
+            commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thicktot, (ref[0].Name,geom))
+            commtxt += "{} = AFFE_CARA_ELEM(COQUE=_F(COQUE_NCOU = {},\n".format(ca_writer.elemprops[-1], len(thicknesses))
+            commtxt += "                                   EPAIS={},\n".format(thicktot)
+            commtxt += "                                   GROUP_MA=('{}', ),\n".format(ref[0].Name)
+            commtxt += "                                   VECTEUR=(1.0, 0.0, 0.0)),\n"
+            commtxt += "                          MODELE=model)\n\n"
+                
+        
+            ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
+        FreeCAD.Console.PrintMessage("Shell of thickness {}mm added.\n".format(thicktot))
+        
     elif ca_writer.member.geos_shellthickness:
         # only use the first shellthickness object
         shellth_obj = ca_writer.member.geos_shellthickness[0]["Object"]
         thickness = shellth_obj.Thickness.getValueAs("mm").Value
         geoms =[]
+        i=0
         for ref in shellth_obj.References: #TODO: work out how to create group of all elements and apply to that in case where len(shellth_obj.References) == 0.
             for geom in ref[1]:
                 geoms.append(geom)
+
+            if 'YoungsModulusX' in ca_writer.mat_objs[0].Material.keys():
+                matname = ca_writer.mat_objs[0].Name + "LAYUP"+str(i)
+                i+=1
+                commtxt += "# Orthotropic material detected, added to shell at default angle\n"
+                commtxt += "{} = DEFI_COMPOSITE(COUCHE=(_F(EPAIS={},\n".format(matname, thickness)
+                commtxt += "                               MATER={},\n".format(ca_writer.mat_objs[0].Name)
+                commtxt += "                               ORIENTATION = 0)))\n\n"
+                
             ca_writer.elemprops.append("elemprop{}".format(len(ca_writer.elemprops)))
             commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thickness, (ref[0].Name,geom))
             commtxt += "{} = AFFE_CARA_ELEM(COQUE=_F(EPAIS={},\n".format(ca_writer.elemprops[-1], thickness)
@@ -48,7 +124,8 @@ def add_femelement_geometry(commtxt, ca_writer):
                 
         
             ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
+        FreeCAD.Console.PrintMessage("Shell of thickness {}mm added.\n".format(thickness))
         
-    return commtxt
+    return commtxt, matname
 
 ##  @}

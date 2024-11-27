@@ -87,8 +87,8 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
     def write_solver_input(self):
 
         timestart = time.process_time()
-        # only use the first material object TODO allow setting multi materials
-        self.mat_obj = self.member.mats_linear[0]["Object"]
+        # only use the first material object TODO deal better with multi materials
+        self.mat_objs = [ML["Object"] for ML in self.member.mats_linear]
         commtxt = "# Code Aster input comm file written from FreeCAD\n"
         commtxt += "DEBUT(LANG='EN')\n\n"
         commtxt = add_mesh.add_mesh(commtxt, self)
@@ -96,9 +96,9 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         commtxt += "                            PHENOMENE='MECANIQUE',\n"
         commtxt += "                            TOUT='OUI'),\n"
         commtxt += "                    MAILLAGE=mesh)\n\n"
-        commtxt = add_femelement_geometry.add_femelement_geometry(commtxt, self)
         commtxt = add_femelement_material.define_femelement_material(commtxt,self)
-        commtxt = add_femelement_material.assign_femelement_material(commtxt,self)
+        commtxt, matname = add_femelement_geometry.add_femelement_geometry(commtxt, self)
+        commtxt = add_femelement_material.assign_femelement_material(commtxt,matname, self)
         commtxt = add_con_fixed.add_con_fixed(commtxt, self)
         commtxt = add_con_force.add_con_force(commtxt, self)
         commtxt += "reslin = MECA_STATIQUE(CARA_ELEM={},\n".format(self.elemprops[0])
