@@ -58,6 +58,12 @@ class ElementGeometryLaminate(base_femelement.BaseFemElement):
             "App::PropertyMaterialList", 
             "Materials", 
             "Layup",
-            "List of materials used (autofills from Materials in Analysis object"
+            "List of materials used (autofills from Materials in Analysis object)"
         )
-        #obj.setPropertyStatus("Layup", "LockDynamic")
+        obj.addProperty(
+            "App::PropertyPythonObject", 
+            "Windall",
+            "Layup",
+            "Dictionary of elements and layups resulting from filament winding analysis"
+        )
+        obj.Windall = {"elements":[], "orientationlists":[], "thicknesslists":[]}

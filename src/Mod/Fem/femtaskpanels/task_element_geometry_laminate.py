@@ -64,7 +64,7 @@ class _TaskPanel(base_femtaskpanel._BaseTaskPanel):
 
         # form made from param and selection widget
         self.form = [self.parameter_widget, self.selection_widget]
-
+        
     def accept(self):
         #self.obj.Thicknesses = self.thicknesses
         self.obj.References = self.selection_widget.references
