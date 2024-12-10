@@ -72,8 +72,6 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         self.geo_file = join(self.dir_name, self.basename + ".geo")
         self.IPmesh_file = join(self.dir_name, self.basename + ".med")
         self.OPmesh_file = join(self.dir_name, self.basename + ".rmed")
-        self.elemprops = []
-        self.fieldmats = []
         self.fixes = []
         self.forces = []
         FreeCAD.Console.PrintLog(f"FemInputWriterCodeAster --> self.dir_name  -->  {self.dir_name}\n")
@@ -101,13 +99,13 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         commtxt = add_femelement_material.assign_femelement_material(commtxt,matname, self)
         commtxt = add_con_fixed.add_con_fixed(commtxt, self)
         commtxt = add_con_force.add_con_force(commtxt, self)
-        commtxt += "reslin = MECA_STATIQUE(CARA_ELEM={},\n".format(self.elemprops[0])
-        commtxt += "                       CHAM_MATER={},\n".format(self.fieldmats[0])
+        commtxt += "reslin = MECA_STATIQUE(CARA_ELEM=elemprop,\n"
+        commtxt += "                       CHAM_MATER=fieldmat,\n"
         commtxt += "                       EXCIT=(_F(CHARGE={}),\n".format(self.fixes[0])
         commtxt += "                              _F(CHARGE={})),\n".format(self.forces[0])
         commtxt += "                       MODELE=model)\n\n"
 
-        commtxt += "IMPR_RESU(RESU=_F(CARA_ELEM={},\n".format(self.elemprops[0])
+        commtxt += "IMPR_RESU(RESU=_F(CARA_ELEM=elemprop,\n"
         commtxt += "                  INFO_MAILLAGE='OUI',\n"
         commtxt += "                  MAILLAGE=mesh,\n"
         commtxt += "                  RESULTAT=reslin),\n"

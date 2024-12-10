@@ -71,31 +71,27 @@ def add_femelement_geometry(commtxt, ca_writer):
 
         geoms =[]
         i=0
-        for ref in shelllam_obj.References: #TODO: work out how to create group of all elements and apply to that in case where len(shelllam_obj.References) == 0.
-            for geom in ref[1]:
-                geoms.append(geom)
-            matname = "LAYUP"+str(i)
-            i+=1
-            commtxt += "# Composite layup detected, added to shell\n"
-            commtxt += "{} = DEFI_COMPOSITE(COUCHE=(_F(EPAIS={},\n".format(matname,thicknesses[0])
-            commtxt += "                                MATER={},\n".format(matnames[0])
-            commtxt += "                                ORIENTATION = {}),\n".format(orientations[0])
-            for j in range(1,len(thicknesses)):
-                commtxt += "                               _F(EPAIS={},\n".format(thicknesses[j])
-                commtxt += "                                MATER={},\n".format(matnames[j])
-                commtxt += "                                ORIENTATION = {}),\n".format(orientations[j])
-            commtxt += "                                ))\n\n"
-            
-            ca_writer.elemprops.append("elemprop{}".format(len(ca_writer.elemprops)))
-            commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thicktot, (ref[0].Name,geom))
-            commtxt += "{} = AFFE_CARA_ELEM(COQUE=_F(COQUE_NCOU = {},\n".format(ca_writer.elemprops[-1], len(thicknesses))
-            commtxt += "                                   EPAIS={},\n".format(thicktot)
-            commtxt += "                                   GROUP_MA=('{}', ),\n".format(ref[0].Name)
-            commtxt += "                                   VECTEUR=(1.0, 0.0, 0.0)),\n"
-            commtxt += "                          MODELE=model)\n\n"
+        if len(shelllam_obj.Windall['elements']) > 0:
+            print('*********************OI**********************')
+            print('TODO WINDING STUFF')
+        else:
+            for ref in shelllam_obj.References: 
+            #TODO: work out how to create group of all elements and apply to that in case where len(shelllam_obj.References) == 0.
+                for geom in ref[1]:
+                    geoms.append(geom)
+                matname = "LAYUP"+str(i)
+                i+=1
+                commtxt += add_layup(matname, matnames, thicknesses, orientations)
                 
-        
-            ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
+                commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thicktot, (ref[0].Name,geom))
+                commtxt += "elemprop = AFFE_CARA_ELEM(COQUE=_F(COQUE_NCOU = {},\n".format(len(thicknesses))
+                commtxt += "                                   EPAIS={},\n".format(thicktot)
+                commtxt += "                                   GROUP_MA=('{}', ),\n".format(ref[0].Name)
+                commtxt += "                                   VECTEUR=(1.0, 0.0, 0.0)),\n"
+                commtxt += "                          MODELE=model)\n\n"
+                    
+            
+                ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
         FreeCAD.Console.PrintMessage("Shell of thickness {}mm added.\n".format(thicktot))
         
     elif ca_writer.member.geos_shellthickness:
@@ -128,4 +124,15 @@ def add_femelement_geometry(commtxt, ca_writer):
         
     return commtxt, matname
 
+def add_layup(LUname, matnames, thicknesses, orientations):
+    commtxt = "# Composite layup detected, added to shell\n"
+    commtxt += "{} = DEFI_COMPOSITE(COUCHE=(_F(EPAIS={},\n".format(LUname,thicknesses[0])
+    commtxt += "                                MATER={},\n".format(matnames[0])
+    commtxt += "                                ORIENTATION = {}),\n".format(orientations[0])
+    for j in range(1,len(thicknesses)):
+        commtxt += "                               _F(EPAIS={},\n".format(thicknesses[j])
+        commtxt += "                                MATER={},\n".format(matnames[j])
+        commtxt += "                                ORIENTATION = {}),\n".format(orientations[j])
+    commtxt += "                                ))\n\n"
+    return commtxt
 ##  @}
