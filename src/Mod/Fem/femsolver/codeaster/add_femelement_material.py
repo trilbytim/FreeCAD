@@ -36,19 +36,44 @@ def define_femelement_material(commtxt, ca_writer):
     for mat_obj in ca_writer.mat_objs:
         commtxt += "# Defining materials\n"
         if 'YoungsModulus' in mat_obj.Material.keys():
-            commtxt += "# Adding isotropic material {}\n".format(mat_obj.Material['CardName'])
-            E = Units.Quantity(mat_obj.Material["YoungsModulus"])
-            E = E.getValueAs("MPa").Value
-            NU = float(mat_obj.Material["PoissonRatio"])
-            if 'Density' in mat_obj.Material.keys():
-                RHO = Units.Quantity(mat_obj.Material["Density"])
-                RHO = RHO.getValueAs('t/mm^3').Value
+            if ca_writer.member.geos_shelllaminate:
+                commtxt += "# Adding isotropic material using orthotropic definition to allow composite analysis{}\n".format(mat_obj.Material['CardName'])
+                E = Units.Quantity(mat_obj.Material["YoungsModulus"])
+                E = E.getValueAs("MPa").Value
+                NU = float(mat_obj.Material["PoissonRatio"])
+                G = E / (2*(1+NU))
+                if 'Density' in mat_obj.Material.keys():
+                    RHO = Units.Quantity(mat_obj.Material["Density"])
+                    RHO = RHO.getValueAs('t/mm^3').Value
+                else:
+                    commtxt += "# No value for Density given, gravitational effects cannot be calculated\n"
+                    RHO = 0
+                commtxt += "{} = DEFI_MATERIAU(ELAS_ORTH=_F(E_L={},\n".format(mat_obj.Name, E)
+                commtxt += "                                E_T={},\n".format(E)
+                commtxt += "                                E_N={},\n".format(E)
+                commtxt += "                                G_LT={},\n".format(G)
+                commtxt += "                                G_LN={},\n".format(G)
+                commtxt += "                                G_TN={},\n".format(G)
+                commtxt += "                                NU_LT={},\n".format(NU)
+                commtxt += "                                NU_LN={},\n".format(NU)
+                commtxt += "                                NU_TN={},\n".format(NU)
+                commtxt += "                                RHO={}))\n\n".format(RHO)
+                
             else:
-                commtxt += "# No value for Density given, gravitational effects cannot be calculated\n"
-                RHO = 0
-            commtxt += "{} = DEFI_MATERIAU(ELAS=_F(E={},\n".format(mat_obj.Name, E)
-            commtxt += "                            NU={},\n".format(NU)
-            commtxt += "                            RHO={}))\n\n".format(RHO)
+                commtxt += "# Adding isotropic material {}\n".format(mat_obj.Material['CardName'])
+                E = Units.Quantity(mat_obj.Material["YoungsModulus"])
+                E = E.getValueAs("MPa").Value
+                NU = float(mat_obj.Material["PoissonRatio"])
+                if 'Density' in mat_obj.Material.keys():
+                    RHO = Units.Quantity(mat_obj.Material["Density"])
+                    RHO = RHO.getValueAs('t/mm^3').Value
+                else:
+                    commtxt += "# No value for Density given, gravitational effects cannot be calculated\n"
+                    RHO = 0
+                commtxt += "{} = DEFI_MATERIAU(ELAS=_F(E={},\n".format(mat_obj.Name, E)
+                commtxt += "                            NU={},\n".format(NU)
+                commtxt += "                            RHO={}))\n\n".format(RHO)
+
             
         elif 'YoungsModulusX' in mat_obj.Material.keys():
             commtxt += "# Adding orthotropic material {}\n".format(mat_obj.Material['CardName'])
@@ -95,8 +120,7 @@ def define_femelement_material(commtxt, ca_writer):
 
 def assign_femelement_material(commtxt, matname, ca_writer):
     commtxt += "# Assigning first material in list\n"
-    ca_writer.fieldmats.append("fieldmat{}".format(len(ca_writer.fieldmats)))
-    commtxt += "{} = AFFE_MATERIAU(AFFE=_F(MATER=({}, ),\n".format(ca_writer.fieldmats[-1], matname)
+    commtxt += "fieldmat = AFFE_MATERIAU(AFFE=_F(MATER=({}, ),\n".format(matname)
     commtxt += "                                 TOUT='OUI'),\n"
     commtxt += "                         MAILLAGE=mesh)\n\n"
 
