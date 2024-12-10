@@ -49,6 +49,7 @@ from . import add_con_fixed
 from . import add_solver_control
 from .. import writerbase
 from femmesh import gmshtools
+from .equations import elasticity_writer
 
 
 class FemInputWriterCodeAster(writerbase.FemInputWriter):
@@ -90,10 +91,7 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         commtxt = "# Code Aster input comm file written from FreeCAD\n"
         commtxt += "DEBUT(LANG='EN')\n\n"
         commtxt = add_mesh.add_mesh(commtxt, self)
-        commtxt += "model = AFFE_MODELE(AFFE=_F(MODELISATION='DST',\n"
-        commtxt += "                            PHENOMENE='MECANIQUE',\n"
-        commtxt += "                            TOUT='OUI'),\n"
-        commtxt += "                    MAILLAGE=mesh)\n\n"
+        commtxt = elasticity_writer.assign_elasticity_model(commtxt, self)
         commtxt = add_femelement_material.define_femelement_material(commtxt,self)
         commtxt, matname = add_femelement_geometry.add_femelement_geometry(commtxt, self)
         commtxt = add_femelement_material.assign_femelement_material(commtxt,matname, self)

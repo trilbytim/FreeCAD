@@ -42,7 +42,6 @@ def add_femelement_geometry(commtxt, ca_writer):
         mat_objs = ca_writer.mat_objs
         thicknesses = shelllam_obj.Thicknesses
         orientations = shelllam_obj.Orientations
-        thicktot = sum(thicknesses)
         assert len(thicknesses) == len(orientations), "{} ply thicknesses given, {} orientation angles given, these should match (i.e provide one thickness and one angle for every ply".format(len(thicknesses), len(orientations))
         materials = shelllam_obj.Materials
         if len(materials) != len(thicknesses):
@@ -80,19 +79,11 @@ def add_femelement_geometry(commtxt, ca_writer):
                 for geom in ref[1]:
                     geoms.append(geom)
                 matname = "LAYUP"+str(i)
+                layup = {"group":ref[0].Name, "matnames":matnames, 'thicknesses':thicknesses, "orientations":orientations}
                 i+=1
-                commtxt += add_layup(matname, matnames, thicknesses, orientations)
-                
-                commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thicktot, (ref[0].Name,geom))
-                commtxt += "elemprop = AFFE_CARA_ELEM(COQUE=_F(COQUE_NCOU = {},\n".format(len(thicknesses))
-                commtxt += "                                   EPAIS={},\n".format(thicktot)
-                commtxt += "                                   GROUP_MA=('{}', ),\n".format(ref[0].Name)
-                commtxt += "                                   VECTEUR=(1.0, 0.0, 0.0)),\n"
-                commtxt += "                          MODELE=model)\n\n"
-                    
-            
+                commtxt += add_layup(matname, layup)
+                commtxt += add_laminate([layup])
                 ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
-        FreeCAD.Console.PrintMessage("Shell of thickness {}mm added.\n".format(thicktot))
         
     elif ca_writer.member.geos_shellthickness:
         # only use the first shellthickness object
@@ -112,9 +103,8 @@ def add_femelement_geometry(commtxt, ca_writer):
                 commtxt += "                               MATER={},\n".format(ca_writer.mat_objs[0].Name)
                 commtxt += "                               ORIENTATION = 0)))\n\n"
                 
-            ca_writer.elemprops.append("elemprop{}".format(len(ca_writer.elemprops)))
             commtxt += "# Shell elements detected, thickness {}mm on item {}\n".format(thickness, (ref[0].Name,geom))
-            commtxt += "{} = AFFE_CARA_ELEM(COQUE=_F(EPAIS={},\n".format(ca_writer.elemprops[-1], thickness)
+            commtxt += "elemprop = AFFE_CARA_ELEM(COQUE=_F(EPAIS={},\n".format(thickness)
             commtxt += "                                   GROUP_MA=('{}', )),\n".format(ref[0].Name)
             commtxt += "                          MODELE=model)\n\n"
                 
@@ -124,7 +114,8 @@ def add_femelement_geometry(commtxt, ca_writer):
         
     return commtxt, matname
 
-def add_layup(LUname, matnames, thicknesses, orientations):
+def add_layup(LUname, layup):
+    thicknesses, orientations, matnames = layup["thicknesses"], layup["orientations"], layup["matnames"]
     commtxt = "# Composite layup detected, added to shell\n"
     commtxt += "{} = DEFI_COMPOSITE(COUCHE=(_F(EPAIS={},\n".format(LUname,thicknesses[0])
     commtxt += "                                MATER={},\n".format(matnames[0])
@@ -134,5 +125,18 @@ def add_layup(LUname, matnames, thicknesses, orientations):
         commtxt += "                                MATER={},\n".format(matnames[j])
         commtxt += "                                ORIENTATION = {}),\n".format(orientations[j])
     commtxt += "                                ))\n\n"
+    return commtxt
+    
+def add_laminate(layups):
+    commtxt = "# Shell elements detected, applying composite laminate definition\n"
+    commtxt += "elemprop = AFFE_CARA_ELEM(COQUE="
+    for layup in layups:
+        thicknesses, group = layup["thicknesses"], layup["group"]
+        thicktot = sum(thicknesses)
+        commtxt += "                                _F(COQUE_NCOU = {},\n".format(len(thicknesses))
+        commtxt += "                                   EPAIS={},\n".format(thicktot)
+        commtxt += "                                   GROUP_MA=('{}', ),\n".format(group)
+        commtxt += "                                   VECTEUR=(1.0, 0.0, 0.0)),\n"
+    commtxt += "                          MODELE=model)\n\n"
     return commtxt
 ##  @}

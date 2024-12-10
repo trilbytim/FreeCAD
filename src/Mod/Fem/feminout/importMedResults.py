@@ -36,7 +36,7 @@ import FreeCAD
 # we need to import FreeCAD before the non FreeCAD library because of the print
 try:
     import sys
-    sys.path.append('/home/timbo/anaconda3/lib/python3.12/site-packages') #TODO fix this
+    sys.path.append('/home/mt1tjs/software/anaconda3/lib/python3.12/site-packages') #TODO fix this
     import medcoupling as mc
 except Exception:
     FreeCAD.Console.PrintError(
