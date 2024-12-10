@@ -73,6 +73,7 @@ def add_femelement_geometry(commtxt, ca_writer):
         if len(shelllam_obj.Windall['elements']) > 0:
             print('*********************OI**********************')
             print('TODO WINDING STUFF')
+            #TODO Assign material group first (make function to do this), then layups, then laminate
         else:
             for ref in shelllam_obj.References: 
             #TODO: work out how to create group of all elements and apply to that in case where len(shelllam_obj.References) == 0.
