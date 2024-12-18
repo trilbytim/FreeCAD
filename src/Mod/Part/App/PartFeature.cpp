@@ -365,7 +365,7 @@ App::ElementNamePair Feature::getExportElementName(TopoShape shape,
                     // find it by matching either planes for faces or lines for edges.
                     auto searchShape = this->Shape.getShape();
                     // If we're still out at a Shell, Solid, CompSolid, or Compound drill in
-                    while (searchShape.getShape().ShapeType() < TopAbs_FACE ) {
+                    while (!searchShape.getShape().IsNull() && searchShape.getShape().ShapeType() < TopAbs_FACE ) {
                         auto shapes = searchShape.getSubTopoShapes();
                         if ( shapes.empty() ) // No more subshapes, so don't continue
                             break;
@@ -1018,7 +1018,7 @@ static TopoShape _getTopoShape(const App::DocumentObject* obj,
             if (linked->isDerivedFrom(App::Line::getClassTypeId())) {
                 static TopoDS_Shape _shape;
                 if (_shape.IsNull()) {
-                    BRepBuilderAPI_MakeEdge builder(gp_Lin(gp_Pnt(0, 0, 0), gp_Dir(1, 0, 0)));
+                    BRepBuilderAPI_MakeEdge builder(gp_Lin(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)));
                     _shape = builder.Shape();
                     _shape.Infinite(Standard_True);
                 }
@@ -1076,6 +1076,7 @@ static TopoShape _getTopoShape(const App::DocumentObject* obj,
                     shape = TopoShape(tag, hasher, _shape);
                 }
             }
+
             if (!shape.isNull()) {
                 shape.transformShape(mat * linkMat, false, true);
                 return shape;
