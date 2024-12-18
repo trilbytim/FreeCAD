@@ -73,7 +73,17 @@ def add_femelement_geometry(commtxt, ca_writer):
         if len(shelllam_obj.Windall['elements']) > 0:
             print('*********************OI**********************')
             print('TODO WINDING STUFF')
-            #TODO Assign material group first (make function to do this), then layups, then laminate
+            commtxt += "# WindAll object detected"
+            for ref in shelllam_obj.References:
+                #set default layup
+                layup = {"group":ref[0].Name, "matnames":matnames, 'thicknesses':thicknesses, "orientations":orientations}
+                layups = [layup]
+                for e,t,o in zip(shelllam_obj.Windall['elements'],shelllam_obj.Windall['thicknesslists'],shelllam_obj.Windall['orientationlists']):
+                    layup = {"group":"E"+str(e), "thicknesses":t, "orientations":o}
+                    layups.append(layup)
+                    commtxt += add_layup(layup["group"], layup)
+                commtxt += add_grps(layups)
+                commtxt += add_laminate(layups)
         else:
             for ref in shelllam_obj.References: 
             #TODO: work out how to create group of all elements and apply to that in case where len(shelllam_obj.References) == 0.
@@ -114,14 +124,22 @@ def add_femelement_geometry(commtxt, ca_writer):
         FreeCAD.Console.PrintMessage("Shell of thickness {}mm added.\n".format(thickness))
         
     return commtxt, matname
+    
+def add_grps(layups):
+    commtxt = "# Adding WindAll groups"
+    commtxt += "grps = DEFI_GROUP(MAILLAGE=mesh, CREA_GROUP_MA = (\n"
+    for layup in layups[1:]:
+        commtxt += "                                                  _F(GROUP_MA = ({},),\n".format(layups[0]["group"])
+        commtxt += "                                                     NUME_INIT = {},\n".format(layup["group"][1:])
+        commtxt += "                                                     NUME_FIN = {}\n,".format(layup["group"][1:])
+        commtxt += "                                                     NOM = '{}'),\n".format(layup["group"])
+    commtxt += "                                                     ))"
 
 def add_layup(LUname, layup):
     thicknesses, orientations, matnames = layup["thicknesses"], layup["orientations"], layup["matnames"]
     commtxt = "# Composite layup detected, added to shell\n"
-    commtxt += "{} = DEFI_COMPOSITE(COUCHE=(_F(EPAIS={},\n".format(LUname,thicknesses[0])
-    commtxt += "                                MATER={},\n".format(matnames[0])
-    commtxt += "                                ORIENTATION = {}),\n".format(orientations[0])
-    for j in range(1,len(thicknesses)):
+    commtxt += "{} = DEFI_COMPOSITE(COUCHE=(\n".format(LUname)
+    for j in range(len(thicknesses)):
         commtxt += "                               _F(EPAIS={},\n".format(thicknesses[j])
         commtxt += "                                MATER={},\n".format(matnames[j])
         commtxt += "                                ORIENTATION = {}),\n".format(orientations[j])
