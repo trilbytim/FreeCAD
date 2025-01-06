@@ -37,7 +37,7 @@ def define_femelement_material(commtxt, ca_writer):
         commtxt += "# Defining materials\n"
         if 'YoungsModulus' in mat_obj.Material.keys():
             if ca_writer.member.geos_shelllaminate:
-                commtxt += "# Adding isotropic material using orthotropic definition to allow composite analysis{}\n".format(mat_obj.Material['CardName'])
+                commtxt += "# Adding isotropic material using orthotropic definition to allow composite analysis {}\n".format(mat_obj.Material['CardName'])
                 E = Units.Quantity(mat_obj.Material["YoungsModulus"])
                 E = E.getValueAs("MPa").Value
                 NU = float(mat_obj.Material["PoissonRatio"])
@@ -118,13 +118,22 @@ def define_femelement_material(commtxt, ca_writer):
         
     return commtxt
 
-def assign_femelement_material(commtxt, matname, ca_writer):
-    commtxt += "# Assigning first material in list\n"
-    commtxt += "fieldmat = AFFE_MATERIAU(AFFE=_F(MATER=({}, ),\n".format(matname)
-    commtxt += "                                 TOUT='OUI'),\n"
-    commtxt += "                         MAILLAGE=mesh)\n\n"
+def assign_femelement_material(commtxt, matnames, elegrps, ca_writer):
+    if elegrps:
+        commtxt += "# Assigning multi lay ups to areas\n"
+        commtxt += "fieldmat = AFFE_MATERIAU(AFFE=(\n"
+        for mn, eg in zip(matnames, elegrps):
+            commtxt += "                               _F(MATER=({}, ),\n".format(mn)
+            commtxt += "                                  GROUP_MA=('{}', )),\n".format(eg)
+        commtxt += "                              ),\n"
+        commtxt += "                              MODELE=model)\n\n"
+    else:
+        commtxt += "# Assigning first material in list to all areas\n"
+        commtxt += "fieldmat = AFFE_MATERIAU(AFFE=_F(MATER=({}, ),\n".format(matnames[0])
+        commtxt += "                                 TOUT='OUI'),\n"
+        commtxt += "                         MAILLAGE=mesh)\n\n"
+    
 
     return commtxt
-
 
 ##  @}
