@@ -93,8 +93,8 @@ class FemInputWriterCodeAster(writerbase.FemInputWriter):
         commtxt = add_mesh.add_mesh(commtxt, self)
         commtxt = elasticity_writer.assign_elasticity_model(commtxt, self)
         commtxt = add_femelement_material.define_femelement_material(commtxt,self)
-        commtxt, matnames, elegrps = add_femelement_geometry.add_femelement_geometry(commtxt, self)
-        commtxt = add_femelement_material.assign_femelement_material(commtxt,matnames, elegrps, self)
+        commtxt, matnames = add_femelement_geometry.add_femelement_geometry(commtxt, self)
+        commtxt = add_femelement_material.assign_femelement_material(commtxt,matnames, self)
         commtxt = add_con_fixed.add_con_fixed(commtxt, self)
         commtxt = add_con_force.add_con_force(commtxt, self)
         commtxt += "reslin = MECA_STATIQUE(CARA_ELEM=elemprop,\n"

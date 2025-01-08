@@ -46,7 +46,6 @@ def add_femelement_geometry(commtxt, ca_writer):
         materials = shelllam_obj.Materials
         if len(shelllam_obj.Windall['elements']) == 0:
             FreeCAD.Console.PrintWarning("Overwriting materials list\n")
-            elegrps = False
             materials = []
             matnames = [] # TODO work out better way of naming materials without needing to reference the object, i.e. use a version of the Card Name condensed to remove spaces
             if len(mat_objs) == 1:
@@ -78,6 +77,7 @@ def add_femelement_geometry(commtxt, ca_writer):
                 layup = {"group":ref[0].Name, "matnames":matnames, 'thicknesses':thicknesses, "orientations":orientations}
                 i+=1
                 commtxt += add_layup(matname, layup)
+                lams = [matname]
                 commtxt += add_laminate([layup])
                 ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
         else:
@@ -89,30 +89,36 @@ def add_femelement_geometry(commtxt, ca_writer):
                 matnames.append(mo.Name)
             
             commtxt += "# WindAll object detected\n"
+            geoms =[]
+            i=0
             for ref in shelllam_obj.References:
+            #TODO: work out how to create group of all elements and apply to that in case where len(shelllam_obj.References) == 0.
+                for geom in ref[1]:
+                    geoms.append(geom)
                 #set default layup
-                layup = {"group":ref[0].Name, "matnames":[matnames[0]], 'thicknesses':[thicknesses[0]], "orientations":[orientations[0]]}
-                layups = [layup]
-                elegrps = ["base"]
-                commtxt += add_layup(elegrps[0], layup)
+                baselayup = {"group":ref[0].Name, "matnames":[matnames[0]], 'thicknesses':[thicknesses[0]], "orientations":[orientations[0]]}
+                layups = [baselayup]
+                lams = [ref[0].Name]
+                commtxt += add_layup(ref[0].Name, baselayup)
                 for e,t,o in zip(shelllam_obj.Windall['elements'],shelllam_obj.Windall['thicknesslists'],shelllam_obj.Windall['orientationlists']):
                     mn = [matnames[0]]
                     for i in range(1,len(t)):
                         mn.append(matnames[1])
                     gname = "E"+str(e)
-                    elegrps.append(gname)
-                    TODO: WORK OUT WHY IT'S NOT PUTTING IN THE EXTRA PLIES!
+                    lams.append(gname)
+                    #TODO: WORK OUT WHY IT'S NOT PUTTING IN THE EXTRA PLIES!
                     layup = {"group":gname, "matnames": mn, "thicknesses":t, "orientations":o}
                     layups.append(layup)
                     commtxt += add_layup(layup["group"], layup)
                 commtxt += add_grps(layups)
                 commtxt += add_laminate(layups)
+                ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
         
     elif ca_writer.member.geos_shellthickness:
         # only use the first shellthickness object
         shellth_obj = ca_writer.member.geos_shellthickness[0]["Object"]
         thickness = shellth_obj.Thickness.getValueAs("mm").Value
-        elegrps = False
+        lams = [matname]
         geoms =[]
         i=0
         for ref in shellth_obj.References: #TODO: work out how to create group of all elements and apply to that in case where len(shellth_obj.References) == 0.
@@ -136,17 +142,17 @@ def add_femelement_geometry(commtxt, ca_writer):
             ca_writer.tools.group_elements[ref[0].Name] = [g for g in geoms]
         FreeCAD.Console.PrintMessage("Shell of thickness {}mm added.\n".format(thickness))
         
-    return commtxt, matnames, elegrps
+    return commtxt, lams
     
 def add_grps(layups):
     commtxt = "# Adding WindAll groups\n"
     commtxt += "grps = DEFI_GROUP(MAILLAGE=mesh, CREA_GROUP_MA = (\n"
     for layup in layups[1:]:
-        commtxt += "                                                  _F(GROUP_MA = ({},),\n".format(layups[0]["group"])
+        commtxt += "                                                  _F(GROUP_MA = ('{}',),\n".format(layups[0]["group"])
         commtxt += "                                                     NUME_INIT = {},\n".format(layup["group"][1:])
         commtxt += "                                                     NUME_FIN = {},\n".format(layup["group"][1:])
         commtxt += "                                                     NOM = '{}'),\n".format(layup["group"])
-    commtxt += "                                                     ))"
+    commtxt += "                                                     ))\n\n"
     return commtxt
 
 def add_layup(LUname, layup):
