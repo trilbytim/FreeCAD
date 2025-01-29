@@ -27,7 +27,8 @@ __url__ = "https://www.freecad.org"
 
 ## \addtogroup FEM
 #  @{
-
+import FreeCAD
+import Part
 
 def add_con_force(commtxt, ca_writer):
     commtxt += "# Adding force loads\n"
@@ -37,8 +38,26 @@ def add_con_force(commtxt, ca_writer):
         dirvec = femobj["Object"].DirectionVector
         F = force_obj.Force.getValueAs('N')
         dirvec.normalize()
-        print('Force load: ',i, femobj, ' on: ', force_obj.Name, ' of: ', F, ' at: ', dirvec)
+        #Need to divide force across length, number of points or area as appropriate
+        force_entities = []
+        for ref in force_obj.References:
+	        for r in ref[1]:
+		        o = getattr(ref[0].Shape, r)
+		        force_entities.append(o)
+        tot = 0
+        for o in force_entities:
+	        if type(o) == Part.Vertex:
+		        tot += 1
+	        elif type(o) == Part.Edge:
+		        tot += o.Length
+	        elif type(o) == Part.Face:
+		        tot += o.Area
         
+        txt = "Force load: {} on: {} of: {} at: {} spread across: {} Vertices, length or area\n".format(i,force_obj.Name, F,dirvec,tot)
+        FreeCAD.Console.PrintMessage(txt)
+        commtxt += '#'+txt
+        
+        F /= tot
         for ref in force_obj.References:
             for geom in ref[1]:
                 geoms.append(geom)

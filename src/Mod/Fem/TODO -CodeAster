@@ -2,9 +2,54 @@ TODO:
 - Che
 - Fix add_femelemt_geometry for if no groups are selected
 - allow multiple groups of materials and element types
-- Add elasticity as proper equation
 - Add stress to med reader
 - Make it possible to have materials as children of ElementGeometryLaminate
+- Run geodesics etc on Femmesh directly
+
+force_objs = []
+for ref in obj.References:
+	for r in ref[1]:
+		o = getattr(ref[0].Shape, r)
+		force_objs.append(o)
+	
+tot = 0
+for o in force_objs:
+	if type(o) == Part.Vertex:
+		tot += 1
+	elif type(o) == Part.Edge:
+		tot += o.Length
+	elif type(o) == Part.Face:
+		tot += o.Area
+
+print(tot)
+
+
+for getting fibre directions:		
+		
+thicknesses = []
+elements = []
+angles = []
+for i in range(1,len(geomesh_obj.TriangleFibreDirectionsIndex)):
+	if geomesh_obj.TriangleFibreDirectionsIndex[i-1] != geomesh_obj.TriangleFibreDirectionsIndex[i]:
+		ths = [lam_obj.Thicknesses[0]]
+		angs = [lam_obj.Orientations[0]]
+		elements.append(i)
+		for j in range(geomesh_obj.TriangleFibreDirectionsIndex[i-1], geomesh_obj.TriangleFibreDirectionsIndex[i]):
+			ths.append(geomesh_obj.TriangleThicknesses[i-1]/(geomesh_obj.TriangleFibreDirectionsIndex[i] - geomesh_obj.TriangleFibreDirectionsIndex[i-1]))
+			ang = geomesh_obj.IndexedTriangleFibreDirections[j]
+			if ang > 90:
+				ang -= 180
+			elif ang < -90:
+				ang += 180
+			angs.append(ang)
+		thicknesses.append(ths)
+		angles.append(angs)
+lam_obj.Windall = {'elements':elements, 'orientationlists':angles, 'thicknesslists':thicknesses}
+
+obj.Windall = {'elements':[364], 'orientationlists':[[0]], 'thicknesslists':[[0.18]]}
+obj.Windall = {'elements':[], 'orientationlists':[], 'thicknesslists':[]}
+	
+
 
 Useful code snippets for med file reading:
 sys.path.append('/home/timbo/anaconda3/lib/python3.12/site-packages')
