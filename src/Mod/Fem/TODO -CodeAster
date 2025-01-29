@@ -5,6 +5,7 @@ TODO:
 - Add stress to med reader
 - Make it possible to have materials as children of ElementGeometryLaminate
 - Run geodesics etc on Femmesh directly
+- Get forces working when applied on points and on faces
 
 force_objs = []
 for ref in obj.References:
