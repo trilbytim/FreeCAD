@@ -1,12 +1,5 @@
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${COIN3D_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIR}
-    ${Python3_INCLUDE_DIRS}
-    ${ZIPIOS_INCLUDES}
-    ${ZLIB_INCLUDE_DIR}
-    ${XercesC_INCLUDE_DIRS}
 )
 
 set(PointsGui_LIBS

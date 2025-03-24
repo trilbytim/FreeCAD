@@ -57,7 +57,7 @@ public:
         if (pObj != this->object) {
             return false;
         }
-        if (!sSubName || sSubName[0] == '\0') {
+        if (Base::Tools::isNullOrEmpty(sSubName)) {
             return false;
         }
         std::string element(sSubName);
@@ -129,7 +129,7 @@ public:
             // clang-format on
         }
         else {
-            // No curve of interest is pre-selected. Try pre-selected point.
+            // No curve of interest is preselected. Try preselected point.
             int pointGeoId = getPreselectPoint();
 
             if (pointGeoId >= 0) {

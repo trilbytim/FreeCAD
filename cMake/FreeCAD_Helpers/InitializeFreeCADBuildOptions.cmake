@@ -12,8 +12,13 @@ macro(InitializeFreeCADBuildOptions)
     option(FREECAD_USE_EXTERNAL_ONDSELSOLVER "Use system installed OndselSolver instead of git submodule." OFF)
     option(FREECAD_USE_FREETYPE "Builds the features using FreeType libs" ON)
     option(FREECAD_BUILD_DEBIAN "Prepare for a build of a Debian package" OFF)
+    option(FREECAD_CHECK_PIVY "Check for pivy version using Python at build time" ON)
+    option(FREECAD_PARALLEL_COMPILE_JOBS "Compilation jobs pool size to fit memory limitations.")
+    option(FREECAD_PARALLEL_LINK_JOBS "Linkage jobs pool size to fit memory limitations.")
     option(BUILD_WITH_CONDA "Set ON if you build FreeCAD with conda" OFF)
     option(BUILD_DYNAMIC_LINK_PYTHON "If OFF extension-modules do not link against python-libraries" ON)
+    option(BUILD_TRACY_FRAME_PROFILER "If ON then enables support for the Tracy frame profiler" OFF)
+
     option(INSTALL_TO_SITEPACKAGES "If ON the freecad root namespace (python) is installed into python's site-packages" ON)
     option(INSTALL_PREFER_SYMLINKS "If ON then fc_copy_sources macro will create symlinks instead of copying files" OFF)
     option(OCCT_CMAKE_FALLBACK "disable usage of occt-config files" OFF)
@@ -75,8 +80,6 @@ macro(InitializeFreeCADBuildOptions)
                  "Official Version"
                  "Community Edition"
     )
-
-    configure_file(${CMAKE_SOURCE_DIR}/src/QtOpenGL.h.cmake ${CMAKE_BINARY_DIR}/src/QtOpenGL.h)
 
     option(BUILD_DESIGNER_PLUGIN "Build and install the designer plugin" OFF)
 
@@ -200,11 +203,33 @@ macro(InitializeFreeCADBuildOptions)
         set(BUILD_SMESH OFF)
     endif()
 
+    if (BUILD_CAM OR BUILD_FLAT_MESH)
+        set(FREECAD_USE_PYBIND11 ON)
+    endif()
+
     # force build directory to be different to source directory
     if (BUILD_FORCE_DIRECTORY)
         if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
             message(FATAL_ERROR "The build directory (${CMAKE_BINARY_DIR}) must be different to the source directory (${CMAKE_SOURCE_DIR}).\n"
                                 "Please choose another build directory! Or disable the option BUILD_FORCE_DIRECTORY.")
+        endif()
+    endif()
+
+    if(FREECAD_PARALLEL_COMPILE_JOBS)
+        if(CMAKE_GENERATOR MATCHES "Ninja")
+            set_property(GLOBAL APPEND PROPERTY JOB_POOLS compile_job_pool=${FREECAD_PARALLEL_COMPILE_JOBS})
+            set(CMAKE_JOB_POOL_COMPILE compile_job_pool)
+        else()
+            message(WARNING "Job pooling is only available with Ninja generators.")
+        endif()
+    endif()
+
+    if(FREECAD_PARALLEL_LINK_JOBS)
+        if(CMAKE_GENERATOR MATCHES "Ninja")
+            set_property(GLOBAL APPEND PROPERTY JOB_POOLS link_job_pool=${FREECAD_PARALLEL_LINK_JOBS})
+            set(CMAKE_JOB_POOL_LINK link_job_pool)
+        else()
+            message(WARNING "Job pooling is only available with Ninja generators.")
         endif()
     endif()
 endmacro(InitializeFreeCADBuildOptions)

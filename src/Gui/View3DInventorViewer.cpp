@@ -45,6 +45,8 @@
 # include <Inventor/actions/SoHandleEventAction.h>
 # include <Inventor/actions/SoRayPickAction.h>
 # include <Inventor/annex/HardCopy/SoVectorizePSAction.h>
+# include <Inventor/annex/Profiler/SoProfiler.h>
+# include <Inventor/annex/Profiler/elements/SoProfilerElement.h>
 # include <Inventor/details/SoDetail.h>
 # include <Inventor/elements/SoLightModelElement.h>
 # include <Inventor/elements/SoOverrideElement.h>
@@ -74,13 +76,16 @@
 # include <Inventor/nodes/SoTranslation.h>
 # include <QBitmap>
 # include <QEventLoop>
-#if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6,6,0) && QT_VERSION >= QT_VERSION_CHECK(5,13,0)
+#if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6,6,0)
 # include <QGuiApplication>
 # define HAS_QTBUG_95434
 #endif
 # include <QKeyEvent>
 # include <QMessageBox>
 # include <QMimeData>
+# include <QOpenGLFramebufferObject>
+# include <QOpenGLWidget>
+# include <QSurfaceFormat>
 # include <QTimer>
 # include <QVariantAnimation>
 # include <QWheelEvent>
@@ -91,6 +96,7 @@
 #include <Base/Console.h>
 #include <Base/FileInfo.h>
 #include <Base/Sequencer.h>
+#include <Base/Profiler.h>
 #include <Base/Tools.h>
 #include <Base/UnitsApi.h>
 #include <Base/Tools2D.h>
@@ -130,6 +136,8 @@
 #include "Navigation/NavigationAnimation.h"
 #include "Utilities.h"
 
+#include <Inventor/nodes/SoRotation.h>
+#include <Inventor/nodes/SoTransformSeparator.h>
 #include <Inventor/So3DAnnotation.h>
 
 
@@ -363,7 +371,7 @@ public:
 
 // *************************************************************************
 
-View3DInventorViewer::View3DInventorViewer(QWidget* parent, const QtGLWidget* sharewidget)
+View3DInventorViewer::View3DInventorViewer(QWidget* parent, const QOpenGLWidget* sharewidget)
     : Quarter::SoQTQuarterAdaptor(parent, sharewidget)
     , SelectionObserver(false, ResolveMode::NoResolve)
     , editViewProvider(nullptr)
@@ -383,7 +391,7 @@ View3DInventorViewer::View3DInventorViewer(QWidget* parent, const QtGLWidget* sh
     init();
 }
 
-View3DInventorViewer::View3DInventorViewer(const QtGLFormat& format, QWidget* parent, const QtGLWidget* sharewidget)
+View3DInventorViewer::View3DInventorViewer(const QSurfaceFormat& format, QWidget* parent, const QOpenGLWidget* sharewidget)
     : Quarter::SoQTQuarterAdaptor(format, parent, sharewidget)
     , SelectionObserver(false, ResolveMode::NoResolve)
     , editViewProvider(nullptr)
@@ -425,6 +433,11 @@ void View3DInventorViewer::init()
     // setting up the defaults for the spin rotation
     initialize();
 
+#ifdef TRACY_ENABLE
+    SoProfiler::init();
+    SoProfiler::enable(TRUE);
+#endif
+
     // NOLINTBEGIN
     auto cam = new SoOrthographicCamera;
     cam->position = SbVec3f(0, 0, 1);
@@ -435,11 +448,24 @@ void View3DInventorViewer::init()
 
     // setup light sources
     SoDirectionalLight* hl = this->getHeadlight();
+
+    environment = new SoEnvironment();
+    environment->ref();
+    environment->setName("environment");
+
     backlight = new SoDirectionalLight();
     backlight->ref();
     backlight->setName("backlight");
     backlight->direction.setValue(-hl->direction.getValue());
     backlight->on.setValue(false); // by default off
+
+    fillLight = new SoDirectionalLight();
+    fillLight->ref();
+    fillLight->setName("filllight");
+    fillLight->direction.setValue(-0.60F, -0.35F, -0.79F);
+    fillLight->intensity.setValue(0.6F);
+    fillLight->color.setValue(0.95F, 0.95F, 1.0F);
+    fillLight->on.setValue(false); // by default off
 
     // Set up background scenegraph with image in it.
     backgroundroot = new SoSeparator;
@@ -470,9 +496,19 @@ void View3DInventorViewer::init()
     cam->farDistance = 10;
     // NOLINTEND
 
+    lightRotation = new SoRotation;
+    lightRotation->ref();
+    lightRotation->rotation.connectFrom(&cam->orientation);
+
     this->foregroundroot->addChild(cam);
     this->foregroundroot->addChild(lm);
     this->foregroundroot->addChild(bc);
+
+    auto threePointLightingSeparator = new SoTransformSeparator;
+    threePointLightingSeparator->addChild(lightRotation);
+    threePointLightingSeparator->addChild(this->fillLight);
+
+    this->foregroundroot->addChild(cam);
 
     // NOTE: For every mouse click event the SoFCUnifiedSelection searches for the picked
     // point which causes a certain slow-down because for all objects the primitives
@@ -482,6 +518,8 @@ void View3DInventorViewer::init()
 
     // set the ViewProvider root node
     pcViewProviderRoot = selectionRoot;
+    pcViewProviderRoot->addChild(threePointLightingSeparator);
+    pcViewProviderRoot->addChild(environment);
 
     // increase refcount before passing it to setScenegraph(), to avoid
     // premature destruction
@@ -541,8 +579,13 @@ void View3DInventorViewer::init()
     // the fix and some details what happens behind the scene have a look at this
     // https://forum.freecad.org/viewtopic.php?f=10&t=7486&p=74777#p74736
     uint32_t id = this->getSoRenderManager()->getGLRenderAction()->getCacheContext();
-    this->getSoRenderManager()->setGLRenderAction(new SoBoxSelectionRenderAction);
+    auto boxSelectionAction = new SoBoxSelectionRenderAction;
+    this->getSoRenderManager()->setGLRenderAction(boxSelectionAction);
     this->getSoRenderManager()->getGLRenderAction()->setCacheContext(id);
+
+#ifdef TRACY_ENABLE
+    boxSelectionAction->enableElement(SoProfilerElement::getClassTypeId(), SoProfilerElement::getClassStackIndex());
+#endif
 
     // set the transparency and antialiasing settings
     getSoRenderManager()->getGLRenderAction()->setTransparencyType(SoGLRenderAction::SORTED_OBJECT_SORTED_TRIANGLE_BLEND);
@@ -567,11 +610,15 @@ void View3DInventorViewer::init()
     //filter a few qt events
     viewerEventFilter = new ViewerEventFilter;
     installEventFilter(viewerEventFilter);
+#if defined(USE_3DCONNEXION_NAVLIB)
     ParameterGrp::handle hViewGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/View");
     if (hViewGrp->GetBool("LegacySpaceMouseDevices", false)) {
         getEventFilter()->registerInputDevice(new SpaceNavigatorDevice);
     }
+#else
+    getEventFilter()->registerInputDevice(new SpaceNavigatorDevice);
+#endif
     getEventFilter()->registerInputDevice(new GesturesDevice(this));
 
     try{
@@ -629,6 +676,10 @@ View3DInventorViewer::~View3DInventorViewer()
     this->objectGroup = nullptr;
     this->backlight->unref();
     this->backlight = nullptr;
+    this->fillLight->unref();
+    this->fillLight = nullptr;
+    this->environment->unref();
+    this->environment = nullptr;
 
     inventorSelection.reset(nullptr);
 
@@ -704,7 +755,7 @@ void View3DInventorViewer::createStandardCursors(double dpr)
 void View3DInventorViewer::aboutToDestroyGLContext()
 {
     if (naviCube) {
-        if (auto gl = qobject_cast<QtGLWidget*>(this->viewport())) {
+        if (auto gl = qobject_cast<QOpenGLWidget*>(this->viewport())) {
             gl->makeCurrent();
         }
         delete naviCube;
@@ -1222,7 +1273,7 @@ void View3DInventorViewer::setGLWidgetCB(void* userdata, SoAction* action)
     // Separator (set envvar COIN_GLERROR_DEBUGGING=1 and re-run to get more information)
     if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
         auto gl = static_cast<QWidget*>(userdata);
-        SoGLWidgetElement::set(action->getState(), qobject_cast<QtGLWidget*>(gl));
+        SoGLWidgetElement::set(action->getState(), qobject_cast<QOpenGLWidget*>(gl));
     }
 }
 
@@ -1232,7 +1283,7 @@ void View3DInventorViewer::handleEventCB(void* userdata, SoEventCallback* n)
     SoGLRenderAction* glra = that->getSoRenderManager()->getGLRenderAction();
     SoAction* action = n->getAction();
     SoGLRenderActionElement::set(action->getState(), glra);
-    SoGLWidgetElement::set(action->getState(), qobject_cast<QtGLWidget*>(that->getGLWidget()));
+    SoGLWidgetElement::set(action->getState(), qobject_cast<QOpenGLWidget*>(that->getGLWidget()));
 }
 
 void View3DInventorViewer::setGradientBackground(View3DInventorViewer::Background grad)
@@ -1432,7 +1483,7 @@ void View3DInventorViewer::showRotationCenter(bool show)
                     .GetParameterGroupByPath("User parameter:BaseApp/Preferences/View")
                     ->GetUnsigned("RotationCenterColor", 4278190131);  // NOLINT
 
-            QColor color = App::Color::fromPackedRGBA<QColor>(rotationCenterColor);
+            QColor color = Base::Color::fromPackedRGBA<QColor>(rotationCenterColor);
 
             rotationCenterGroup = new SoSkipBoundingGroup();
 
@@ -1539,6 +1590,25 @@ void View3DInventorViewer::setBacklightEnabled(bool on)
 bool View3DInventorViewer::isBacklightEnabled() const
 {
     return this->backlight->on.getValue();
+}
+
+SoDirectionalLight* View3DInventorViewer::getFillLight() const
+{
+    return this->fillLight;
+}
+
+void View3DInventorViewer::setFillLightEnabled(bool on)
+{
+    this->fillLight->on = on;
+}
+
+bool View3DInventorViewer::isFillLightEnabled() const
+{
+    return this->fillLight->on.getValue();
+}
+SoEnvironment* View3DInventorViewer::getEnvironment() const
+{
+    return this->environment;
 }
 
 void View3DInventorViewer::setSceneGraph(SoNode* root)
@@ -2070,15 +2140,15 @@ void View3DInventorViewer::setRenderType(RenderType type)
             int width = size[0];
             int height = size[1];
 
-            auto gl = static_cast<QtGLWidget*>(this->viewport());  // NOLINT
+            auto gl = static_cast<QOpenGLWidget*>(this->viewport());  // NOLINT
             gl->makeCurrent();
             QOpenGLFramebufferObjectFormat fboFormat;
             fboFormat.setSamples(getNumSamples());
-            fboFormat.setAttachment(QtGLFramebufferObject::Depth);
-            auto fbo = new QtGLFramebufferObject(width, height, fboFormat);
+            fboFormat.setAttachment(QOpenGLFramebufferObject::Depth);
+            auto fbo = new QOpenGLFramebufferObject(width, height, fboFormat);
             if (fbo->format().samples() > 0) {
                 renderToFramebuffer(fbo);
-                framebuffer = new QtGLFramebufferObject(fbo->size());
+                framebuffer = new QOpenGLFramebufferObject(fbo->size());
                 // this is needed to be able to render the texture later
                 QOpenGLFramebufferObject::blitFramebuffer(framebuffer, fbo);
                 delete fbo;
@@ -2104,7 +2174,7 @@ View3DInventorViewer::RenderType View3DInventorViewer::getRenderType() const
 
 QImage View3DInventorViewer::grabFramebuffer()
 {
-    auto gl = static_cast<QtGLWidget*>(this->viewport());  // NOLINT
+    auto gl = static_cast<QOpenGLWidget*>(this->viewport());  // NOLINT
     gl->makeCurrent();
 
     QImage res;
@@ -2146,18 +2216,18 @@ QImage View3DInventorViewer::grabFramebuffer()
 void View3DInventorViewer::imageFromFramebuffer(int width, int height, int samples,
                                                 const QColor& bgcolor, QImage& img)
 {
-    auto gl = static_cast<QtGLWidget*>(this->viewport());  // NOLINT
+    auto gl = static_cast<QOpenGLWidget*>(this->viewport());  // NOLINT
     gl->makeCurrent();
 
-    const QtGLContext* context = QtGLContext::currentContext();
+    const QOpenGLContext* context = QOpenGLContext::currentContext();
     if (!context) {
         Base::Console().Warning("imageFromFramebuffer failed because no context is active\n");
         return;
     }
 
-    QtGLFramebufferObjectFormat fboFormat;
+    QOpenGLFramebufferObjectFormat fboFormat;
     fboFormat.setSamples(samples);
-    fboFormat.setAttachment(QtGLFramebufferObject::Depth);
+    fboFormat.setAttachment(QOpenGLFramebufferObject::Depth);
     // With enabled alpha a transparent background is supported but
     // at the same time breaks semi-transparent models. A workaround
     // is to use a certain background color using GL_RGB as texture
@@ -2165,7 +2235,7 @@ void View3DInventorViewer::imageFromFramebuffer(int width, int height, int sampl
     // replaces it with the color requested by the user.
     fboFormat.setInternalTextureFormat(getInternalTextureFormat());
 
-    QtGLFramebufferObject fbo(width, height, fboFormat);
+    QOpenGLFramebufferObject fbo(width, height, fboFormat);
 
     const QColor col = backgroundColor();
     auto grad = getGradientBackground();
@@ -2214,9 +2284,9 @@ void View3DInventorViewer::imageFromFramebuffer(int width, int height, int sampl
     }
 }
 
-void View3DInventorViewer::renderToFramebuffer(QtGLFramebufferObject* fbo)
+void View3DInventorViewer::renderToFramebuffer(QOpenGLFramebufferObject* fbo)
 {
-    static_cast<QtGLWidget*>(this->viewport())->makeCurrent();  // NOLINT
+    static_cast<QOpenGLWidget*>(this->viewport())->makeCurrent();  // NOLINT
     fbo->bind();
     int width = fbo->size().width();
     int height = fbo->size().height();
@@ -2358,6 +2428,8 @@ void View3DInventorViewer::renderGLImage()
 // upon spin.
 void View3DInventorViewer::renderScene()
 {
+    ZoneScoped;
+
     // Must set up the OpenGL viewport manually, as upon resize
     // operations, Coin won't set it up until the SoGLRenderAction is
     // applied again. And since we need to do glClear() before applying
@@ -2377,15 +2449,19 @@ void View3DInventorViewer::renderScene()
     glDepthRange(0.1,1.0);
 #endif
 
-    // Render our scenegraph with the image.
     SoGLRenderAction* glra = this->getSoRenderManager()->getGLRenderAction();
     SoState* state = glra->getState();
-    SoDevicePixelRatioElement::set(state, devicePixelRatio());
-    SoGLWidgetElement::set(state, qobject_cast<QtGLWidget*>(this->getGLWidget()));
-    SoGLRenderActionElement::set(state, glra);
-    SoGLVBOActivatedElement::set(state, this->vboEnabled);
-    drawSingleBackground(col);
-    glra->apply(this->backgroundroot);
+
+    // Render our scenegraph with the image.
+    {
+        ZoneScopedN("Background");
+        SoDevicePixelRatioElement::set(state, devicePixelRatio());
+        SoGLWidgetElement::set(state, qobject_cast<QOpenGLWidget*>(this->getGLWidget()));
+        SoGLRenderActionElement::set(state, glra);
+        SoGLVBOActivatedElement::set(state, this->vboEnabled);
+        drawSingleBackground(col);
+        glra->apply(this->backgroundroot);
+    }
 
     if (!this->shading) {
         state->push();
@@ -2423,7 +2499,10 @@ void View3DInventorViewer::renderScene()
 #endif
 
     // Render overlay front scenegraph.
-    glra->apply(this->foregroundroot);
+    {
+        ZoneScopedN("Foreground");
+        glra->apply(this->foregroundroot);
+    }
 
     if (this->axiscrossEnabled) {
         this->drawAxisCross();
@@ -2441,8 +2520,11 @@ void View3DInventorViewer::renderScene()
 
     printDimension();
 
-    for (auto it : this->graphicsItems) {
-        it->paintGL();
+    {
+        ZoneScopedN("Graphics items");
+        for (auto it : this->graphicsItems) {
+            it->paintGL();
+        }
     }
 
     //fps rendering
@@ -2461,7 +2543,7 @@ void View3DInventorViewer::renderScene()
         draw2DString(stream.str().c_str(),
                      SbVec2s(10, 10),
                      SbVec2f((overlayLeftWidgets.empty() ? 0.1f : 1.1f), 0.1f),
-                     App::Color(static_cast<uint32_t>(axisLetterColor)));  // NOLINT
+                     Base::Color(static_cast<uint32_t>(axisLetterColor)));  // NOLINT
     }
 
     if (naviCubeEnabled) {
@@ -2604,6 +2686,8 @@ void View3DInventorViewer::selectAll()
 
 bool View3DInventorViewer::processSoEvent(const SoEvent* ev)
 {
+    ZoneScoped;
+
     if (naviCubeEnabled && naviCube->processSoEvent(ev)) {
         return true;
     }
@@ -3162,27 +3246,31 @@ void View3DInventorViewer::pubSeekToPoint(const SbVec3f& pos)
     this->seekToPoint(pos);
 }
 
-void View3DInventorViewer::setCameraOrientation(const SbRotation& orientation, bool moveToCenter)
+std::shared_ptr<NavigationAnimation> View3DInventorViewer::setCameraOrientation(const SbRotation& orientation, const bool moveToCenter) const
 {
-    navigation->setCameraOrientation(orientation, moveToCenter);
+    return navigation->setCameraOrientation(orientation, moveToCenter);
 }
 
 void View3DInventorViewer::setCameraType(SoType type)
 {
     inherited::setCameraType(type);
 
+    SoCamera* cam = this->getSoRenderManager()->getCamera();
+
+    if (!cam) {
+        return;
+    }
+
     if (type.isDerivedFrom(SoPerspectiveCamera::getClassTypeId())) {
         // When doing a viewAll() for an orthographic camera and switching
         // to perspective the scene looks completely strange because of the
         // heightAngle. Setting it to 45 deg also causes an issue with a too
         // close camera but we don't have this other ugly effect.
-        SoCamera* cam = this->getSoRenderManager()->getCamera();
-        if (!cam) {
-            return;
-        }
 
         static_cast<SoPerspectiveCamera*>(cam)->heightAngle = (float)(M_PI / 4.0);  // NOLINT
     }
+
+    lightRotation->rotation.connectFrom(&cam->orientation);
 }
 
 void View3DInventorViewer::moveCameraTo(const SbRotation& orientation, const SbVec3f& position, int duration)
@@ -3499,14 +3587,86 @@ void View3DInventorViewer::alignToSelection()
     }
 
     const auto globalPlacement = App::GeoFeature::getGlobalPlacement(selection[0].pResolvedObject, selection[0].pObject, elementName.oldName);
-    const auto rotation = globalPlacement.getRotation() * geoFeature->Placement.getValue().getRotation().inverse();
+    const auto globalRotation = globalPlacement.getRotation() * geoFeature->Placement.getValue().getRotation().inverse();
     const auto splitSubName = Base::Tools::splitSubName(elementName.oldName);
     const auto geoFeatureSubName = !splitSubName.empty() ? splitSubName.back() : "";
 
-    Base::Vector3d direction;
-    if (geoFeature->getCameraAlignmentDirection(direction, geoFeatureSubName.c_str())) {
-        rotation.multVec(direction, direction);
-        const auto orientation = SbRotation(SbVec3f(0, 0, 1), Base::convertTo<SbVec3f>(direction));
+    Base::Vector3d alignmentZ;
+    if (geoFeature->getCameraAlignmentDirection(alignmentZ, geoFeatureSubName.c_str())) {
+
+        // Find the x alignment
+        Base::Vector3d alignmentX;
+        Base::Rotation(Base::Vector3d(0, 0, -1), alignmentZ).multVec(Base::Vector3d(1, 0, 0), alignmentX);
+
+        // Convert to global coordinates
+        globalRotation.multVec(alignmentZ, alignmentZ);
+        globalRotation.multVec(alignmentX, alignmentX);
+        
+        const auto cameraOrientation = getCameraOrientation();
+
+        auto directionZ = Base::convertTo<SbVec3f>(alignmentZ);
+        auto directionX = Base::convertTo<SbVec3f>(alignmentX);
+
+        SbVec3f cameraZ;
+        cameraOrientation.multVec(SbVec3f(0, 0, 1), cameraZ);
+
+        // Negate if the camera is closer to the opposite direction
+        if (cameraZ.dot(directionZ) < 0) {
+            directionZ.negate();
+        }
+
+        // Rotate the camera to align with directionZ by the smallest angle to align the z-axis
+        const SbRotation intermediateOrientation = cameraOrientation * SbRotation(cameraZ, directionZ);
+
+        SbVec3f intermediateX;
+        intermediateOrientation.multVec(SbVec3f(1, 0, 0), intermediateX);
+
+        // Find angle between directionX and intermediateX
+        const SbRotation rotation(directionX, intermediateX);
+        SbVec3f axis;
+        float angle;
+        rotation.getValue(axis, angle);
+
+        // Flip the sign of the angle if axis and directionZ are in opposite direction
+        if (axis.dot(directionZ) < 0 && angle != 0) {
+            angle *= -1;
+        }
+        
+        // Make angle positive
+        if (angle < 0) {
+            angle += 2 * M_PI;
+        }
+        
+        // Find the angle to rotate to the nearest horizontal or vertical alignment with directionX.
+        // f is a small value used to get more deterministic behavior when the camera is at directionX +- 45 degrees.
+        const float f = 0.00001F;
+        
+        if (angle <= M_PI_4 + f) {
+            angle = 0;
+        }
+        else if (angle <= 3 * M_PI_4 + f) {
+            angle = M_PI_2;
+        }
+        else if (angle < M_PI + M_PI_4 - f) {
+            angle = M_PI;
+        }
+        else if (angle < M_PI + 3 * M_PI_4 - f) {
+            angle = M_PI + M_PI_2;
+        }
+        else {
+            angle = 0;
+        }
+
+        SbRotation(directionZ, angle).multVec(directionX, directionX);
+
+        const SbVec3f directionY = directionZ.cross(directionX);
+
+        const auto orientation = SbRotation(SbMatrix(
+            directionX[0],  directionX[1],  directionX[2],  0,
+            directionY[0],  directionY[1],  directionY[2],  0,
+            directionZ[0],  directionZ[1],  directionZ[2],  0,
+            0,              0,              0,              1));
+        
         setCameraOrientation(orientation);
     }
 }
@@ -3571,12 +3731,14 @@ bool View3DInventorViewer::isSpinning() const
  * @param translation An additional translation on top of the translation caused by the rotation around the rotation center
  * @param duration The duration in milliseconds
  * @param wait When false, start the animation and continue (asynchronous). When true, start the animation and wait for the animation to finish (synchronous)
+ *
+ * @return The started @class NavigationAnimation
  */
-void View3DInventorViewer::startAnimation(const SbRotation& orientation,
+std::shared_ptr<NavigationAnimation> View3DInventorViewer::startAnimation(const SbRotation& orientation,
                                           const SbVec3f& rotationCenter,
                                           const SbVec3f& translation,
                                           int duration,
-                                          bool wait)
+                                          const bool wait) const
 {
     // Currently starts a FixedTimeAnimation. If there is going to be an additional animation like
     // FixedVelocityAnimation, check the animation type from a parameter and start the right animation
@@ -3596,6 +3758,8 @@ void View3DInventorViewer::startAnimation(const SbRotation& orientation,
         navigation, orientation, rotationCenter, translation, duration, easingCurve);
 
     navigation->startAnimating(animation, wait);
+
+    return animation;
 }
 
 /**
@@ -3748,11 +3912,11 @@ void View3DInventorViewer::updateColors()
     unsigned long colorLong;
 
     colorLong = Gui::ViewParams::instance()->getAxisXColor();
-    m_xColor = App::Color(static_cast<uint32_t>(colorLong));
+    m_xColor = Base::Color(static_cast<uint32_t>(colorLong));
     colorLong = Gui::ViewParams::instance()->getAxisYColor();
-    m_yColor = App::Color(static_cast<uint32_t>(colorLong));
+    m_yColor = Base::Color(static_cast<uint32_t>(colorLong));
     colorLong = Gui::ViewParams::instance()->getAxisZColor();
-    m_zColor = App::Color(static_cast<uint32_t>(colorLong));
+    m_zColor = Base::Color(static_cast<uint32_t>(colorLong));
 
     naviCube->updateColors();
 

@@ -35,6 +35,7 @@
 #include <App/Document.h>
 #include <App/DocumentObject.h>
 #include <Base/Console.h>
+#include <Base/Tools.h>
 #include <Gui/Application.h>
 #include <Gui/BitmapFactory.h>
 #include <Gui/Command.h>
@@ -69,7 +70,7 @@ namespace PartGui {
         {
             if (!obj || !obj->isDerivedFrom<Part::Feature>())
                 return false;
-            if (!sSubName || sSubName[0] == '\0')
+            if (Base::Tools::isNullOrEmpty(sSubName))
                 return (mode == ALL);
             std::string element(sSubName);
             switch (mode) {
@@ -121,13 +122,8 @@ ShapeBuilderWidget::ShapeBuilderWidget(QWidget* parent)
             this, &ShapeBuilderWidget::onSelectButtonClicked);
     connect(d->ui.createButton, &QPushButton::clicked,
             this, &ShapeBuilderWidget::onCreateButtonClicked);
-#if QT_VERSION < QT_VERSION_CHECK(5,15,0)
-    connect(&d->bg, qOverload<int>(&QButtonGroup::buttonClicked),
-            this, &ShapeBuilderWidget::switchMode);
-#else
     connect(&d->bg, &QButtonGroup::idClicked,
             this, &ShapeBuilderWidget::switchMode);
-#endif
 
     d->gate = new ShapeSelection();
     Gui::Selection().addSelectionGate(d->gate);

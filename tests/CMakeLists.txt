@@ -68,18 +68,11 @@ function(setup_qt_test)
         endif()
 
         target_include_directories(${_testname}_Tests_run PUBLIC
-            ${Python3_INCLUDE_DIRS}
-            ${XercesC_INCLUDE_DIRS}
-            ${ZIPIOS_INCLUDES}
-            ${QtGui_INCLUDE_DIRS}
-            ${QtWidgets_INCLUDE_DIRS}
-            ${QtTest_INCLUDE_DIRS}
-            ${COIN3D_INCLUDE_DIRS})
+            SYSTEM
+            ${QtTest_INCLUDE_DIRS})
         target_link_libraries(${_testname}_Tests_run
             FreeCADApp
             FreeCADGui
-            ${QtCore_LIBRARIES}
-            ${QtWidgets_LIBRARIES}
             ${QtTest_LIBRARIES}
             ${${_testname}_LIBS})
     endforeach()
@@ -133,11 +126,6 @@ if ( EXISTS "${CMAKE_SOURCE_DIR}/tests/lib/googletest" )
 endif()
 add_subdirectory(src)
 
-target_include_directories(Tests_run PUBLIC
-    ${Python3_INCLUDE_DIRS}
-    ${XercesC_INCLUDE_DIRS}
-    ${ZIPIOS_INCLUDES}
-)
 target_link_libraries(Tests_run
     gtest_main
     gmock_main

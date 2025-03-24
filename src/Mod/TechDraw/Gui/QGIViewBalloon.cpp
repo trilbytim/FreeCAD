@@ -267,7 +267,6 @@ QGIViewBalloon::QGIViewBalloon()
     addToGroup(balloonShape);
     balloonShape->setNormalColor(prefNormalColor());
     balloonShape->setFill(Qt::transparent, Qt::SolidPattern);
-    balloonShape->setFillOverride(true);
     balloonShape->setPrettyNormal();
 
     arrow = new QGIArrow();
@@ -785,7 +784,7 @@ void QGIViewBalloon::drawBalloon(bool originDrag)
 
     double xAdj = 0.0;
     double yAdj = 0.0;
-    int endType = balloon->EndType.getValue();
+    ArrowType endType = static_cast<ArrowType>(balloon->EndType.getValue());
     double arrowAdj = QGIArrow::getOverlapAdjust(
         endType, balloon->EndTypeScale.getValue() * QGIArrow::getPrefArrowSize());
 
@@ -863,9 +862,6 @@ void QGIViewBalloon::drawBalloon(bool originDrag)
 void QGIViewBalloon::setPrettyPre(void)
 {
     arrow->setPrettyPre();
-    //TODO: primPath needs override for fill
-    //balloonShape->setFillOverride(true);   //don't fill with pre or select colours.
-    //    balloonShape->setFill(Qt::white, Qt::NoBrush);
     balloonShape->setPrettyPre();
     balloonLines->setPrettyPre();
 }
@@ -948,15 +944,16 @@ QColor QGIViewBalloon::prefNormalColor()
     if (vp) {
         vpBalloon = dynamic_cast<ViewProviderBalloon*>(vp);
         if (vpBalloon) {
-            App::Color fcColor = Preferences::getAccessibleColor(vpBalloon->Color.getValue());
+            Base::Color fcColor = Preferences::getAccessibleColor(vpBalloon->Color.getValue());
             setNormalColor(fcColor.asValue<QColor>());
         }
     }
     return getNormalColor();
 }
 
-int QGIViewBalloon::prefDefaultArrow() const { return Preferences::balloonArrow(); }
-
+ArrowType QGIViewBalloon::prefDefaultArrow() const {
+    return Preferences::balloonArrow();
+}
 
 //should this be an object property or global preference?
 //when would you want a crooked pyramid?

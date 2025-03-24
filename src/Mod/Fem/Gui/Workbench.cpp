@@ -203,6 +203,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     *results << "Separator"
              << "FEM_PostApplyChanges"
              << "FEM_PostPipelineFromResult"
+             << "FEM_PostBranchFilter"
              << "Separator"
              << "FEM_PostFilterWarp"
              << "FEM_PostFilterClipScalar"

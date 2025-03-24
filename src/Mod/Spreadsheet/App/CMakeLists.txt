@@ -5,11 +5,6 @@ endif(WIN32)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${Python3_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${ZIPIOS_INCLUDES}
-    ${ZLIB_INCLUDE_DIR}
-    ${XercesC_INCLUDE_DIRS}
 )
 
 set(Spreadsheet_LIBS

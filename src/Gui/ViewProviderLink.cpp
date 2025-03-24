@@ -25,6 +25,16 @@
 #ifndef _PreComp_
 # include <atomic>
 # include <cctype>
+# include <unordered_set>
+# include <unordered_map>
+# include <utility>
+# include <deque>
+# include <memory>
+# include <algorithm>
+# include <vector>
+# include <set>
+# include <map>
+# include <string>
 # include <boost/algorithm/string/predicate.hpp>
 # include <Inventor/SoPickedPoint.h>
 # include <Inventor/actions/SoGetBoundingBoxAction.h>
@@ -41,7 +51,6 @@
 # include <Inventor/nodes/SoSwitch.h>
 # include <Inventor/nodes/SoTransform.h>
 # include <Inventor/sensors/SoNodeSensor.h>
-# include <Inventor/SoPickedPoint.h>
 # include <QApplication>
 # include <QMenu>
 # include <QCheckBox>
@@ -191,7 +200,7 @@ public:
         }
     }
 
-    LinkInfo(ViewProviderDocumentObject *vp)
+    explicit LinkInfo(ViewProviderDocumentObject *vp)
         :ref(0),pcLinked(vp)
     {
         FC_LOG("new link to " << pcLinked->getObject()->getFullName());
@@ -697,7 +706,7 @@ namespace Gui
     {
         px->release();
     }
-}
+} // namespace Gui
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -997,7 +1006,7 @@ void LinkView::setMaterial(int index, const App::Material *material) {
             pcLinkRoot->removeColorOverride();
             return;
         }
-        App::Color c = material->diffuseColor;
+        Base::Color c = material->diffuseColor;
         c.setTransparency(material->transparency);
         pcLinkRoot->setColorOverride(c);
         for(int i=0;i<getSize();++i)
@@ -1010,7 +1019,7 @@ void LinkView::setMaterial(int index, const App::Material *material) {
             info.pcRoot->removeColorOverride();
             return;
         }
-        App::Color c = material->diffuseColor;
+        Base::Color c = material->diffuseColor;
         c.setTransparency(material->transparency);
         info.pcRoot->setColorOverride(c);
     }
@@ -1525,8 +1534,9 @@ bool LinkView::linkGetDetailPath(const char *subname, SoFullPath *path, SoDetail
             return true;
 
         if(info.isLinked()) {
-            info.linkInfo->getDetail(false,childType,subname,det,path);
-            return true;
+            if (info.linkInfo->getDetail(false,childType,subname,det,path)) {
+                return true;
+            }
         }
     }
     if(isLinked()) {
@@ -2342,7 +2352,7 @@ bool ViewProviderLink::getDetailPath(
         return false;
     }
     std::string _subname;
-    if(subname && subname[0]) {
+    if(!Base::Tools::isNullOrEmpty(subname)) {
         if (auto linked = ext->getLinkedObjectValue()) {
             if (const char *dot = strchr(subname,'.')) {
                 if(subname[0]=='$') {
@@ -2375,8 +2385,19 @@ bool ViewProviderLink::getDetailPath(
 
 bool ViewProviderLink::onDelete(const std::vector<std::string> &) {
     auto element = getObject<App::LinkElement>();
-    if (element && !element->canDelete())
+    if (element && !element->canDelete()) {
         return false;
+    }
+
+    auto link = getObject<App::Link>();
+    if (link->ElementCount.getValue() != 0) {
+        auto doc = link->getDocument();
+        auto elements = link->ElementList.getValues();
+        for (auto element : elements) {
+            doc->removeObject(element->getNameInDocument());
+        }
+    }
+    
     auto ext = getLinkExtension();
     if (ext->isLinkMutated()) {
         auto linked = ext->getLinkedObjectValue();
@@ -2933,7 +2954,7 @@ PyObject *ViewProviderLink::getPyLinkView() {
     return linkView->getPyObject();
 }
 
-std::map<std::string, App::Color> ViewProviderLink::getElementColors(const char *subname) const {
+std::map<std::string, Base::Color> ViewProviderLink::getElementColors(const char *subname) const {
     bool isPrefix = true;
     if(!subname)
         subname = "";
@@ -2941,7 +2962,7 @@ std::map<std::string, App::Color> ViewProviderLink::getElementColors(const char 
         auto len = strlen(subname);
         isPrefix = !len || subname[len-1]=='.';
     }
-    std::map<std::string, App::Color> colors;
+    std::map<std::string, Base::Color> colors;
     auto ext = getLinkExtension();
     if(!ext || ! ext->getColoredElementsProperty())
         return colors;
@@ -2951,7 +2972,7 @@ std::map<std::string, App::Color> ViewProviderLink::getElementColors(const char 
     std::string wildcard(subname);
     if(wildcard == "Face" || wildcard == "Face*" || wildcard.empty()) {
         if(wildcard.size()==4 || OverrideMaterial.getValue()) {
-            App::Color c = ShapeMaterial.getValue().diffuseColor;
+            Base::Color c = ShapeMaterial.getValue().diffuseColor;
             c.setTransparency(ShapeMaterial.getValue().transparency);
             colors["Face"] = c;
             if(wildcard.size()==4)
@@ -3072,9 +3093,9 @@ std::map<std::string, App::Color> ViewProviderLink::getElementColors(const char 
     bool found = true;
     if(colors.empty()) {
         found = false;
-        colors.emplace(subname,App::Color());
+        colors.emplace(subname,Base::Color());
     }
-    std::map<std::string, App::Color> ret;
+    std::map<std::string, Base::Color> ret;
     for(const auto &v : colors) {
         const char *pos = nullptr;
         auto sobj = getObject()->resolve(v.first.c_str(),nullptr,nullptr,&pos);
@@ -3098,18 +3119,18 @@ std::map<std::string, App::Color> ViewProviderLink::getElementColors(const char 
     return ret;
 }
 
-void ViewProviderLink::setElementColors(const std::map<std::string, App::Color> &colorMap) {
+void ViewProviderLink::setElementColors(const std::map<std::string, Base::Color> &colorMap) {
     auto ext = getLinkExtension();
     if(!ext || ! ext->getColoredElementsProperty())
         return;
 
     // For checking and collapsing array element color
-    std::map<std::string,std::map<int,App::Color> > subMap;
+    std::map<std::string,std::map<int,Base::Color> > subMap;
     int element_count = ext->getElementCountValue();
 
     std::vector<std::string> subs;
-    std::vector<App::Color> colors;
-    App::Color faceColor;
+    std::vector<Base::Color> colors;
+    Base::Color faceColor;
     bool hasFaceColor = false;
     for(const auto &v : colorMap) {
         if(!hasFaceColor && v.first == "Face") {
@@ -3133,7 +3154,7 @@ void ViewProviderLink::setElementColors(const std::map<std::string, App::Color> 
     }
     for(auto &v : subMap) {
         if(element_count == (int)v.second.size()) {
-            App::Color firstColor = v.second.begin()->second;
+            Base::Color firstColor = v.second.begin()->second;
             subs.push_back(v.first);
             colors.push_back(firstColor);
             for(auto it=v.second.begin();it!=v.second.end();) {
@@ -3179,7 +3200,7 @@ void ViewProviderLink::applyColors() {
     // reset color and visibility first
     action.apply(linkView->getLinkRoot());
 
-    std::map<std::string, std::map<std::string,App::Color> > colorMap;
+    std::map<std::string, std::map<std::string,Base::Color> > colorMap;
     std::set<std::string> hideList;
     auto colors = getElementColors();
     colors.erase("Face");
@@ -3286,7 +3307,16 @@ void ViewProviderLink::getPropertyMap(std::map<std::string,App::Property*> &Map)
     }
 }
 
-void ViewProviderLink::getPropertyList(std::vector<App::Property*> &List) const {
+void ViewProviderLink::visitProperties(const std::function<void(App::Property*)>& visitor) const
+{
+    inherited::visitProperties(visitor);
+    if (childVp != nullptr) {
+        childVp->visitProperties(visitor);
+    }
+}
+
+void ViewProviderLink::getPropertyList(std::vector<App::Property*>& List) const
+{
     std::map<std::string,App::Property*> Map;
     getPropertyMap(Map);
     List.reserve(List.size()+Map.size());

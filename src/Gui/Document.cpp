@@ -23,11 +23,20 @@
 #include "PreCompiled.h"
 
 #ifndef _PreComp_
+# include <tuple>
+# include <memory>
+# include <list>
+# include <string>
+# include <map>
+# include <set>
+# include <unordered_map>
+# include <vector>
 # include <cctype>
 # include <mutex>
 # include <QApplication>
 # include <QFileInfo>
 # include <QMessageBox>
+# include <QOpenGLWidget>
 # include <QTextStream>
 # include <QTimer>
 # include <QStatusBar>
@@ -109,7 +118,7 @@ struct DocumentP
     std::map<SoSeparator *,ViewProviderDocumentObject*> _CoinMap;
     std::map<std::string,ViewProvider*> _ViewProviderMapAnnotation;
     std::list<ViewProviderDocumentObject*> _redoViewProviders;
-    
+
     using Connection = boost::signals2::connection;
     Connection connectNewObject;
     Connection connectDelObject;
@@ -1701,7 +1710,7 @@ void Document::RestoreDocFile(Base::Reader &reader)
         localreader->readElement("Camera");
         const char* ppReturn = localreader->getAttribute("settings");
         cameraSettings.clear();
-        if(ppReturn && ppReturn[0]) {
+        if(!Base::Tools::isNullOrEmpty(ppReturn)) {
             saveCameraSettings(ppReturn);
             try {
                 const char** pReturnIgnore=nullptr;
@@ -1938,8 +1947,9 @@ void Document::importObjects(const std::vector<App::DocumentObject*>& obj, Base:
     localreader->readEndElement("Document");
 
     // In the file GuiDocument.xml new data files might be added
-    if (!localreader->getFilenames().empty())
+    if (localreader->hasFilenames()) {
         reader.initLocalReader(localreader);
+    }
 }
 
 void Document::slotFinishImportObjects(const std::vector<App::DocumentObject*> &objs) {
@@ -1990,11 +2000,11 @@ MDIView *Document::createView(const Base::Type& typeId)
     std::list<MDIView*> theViews = this->getMDIViewsOfType(typeId);
     if (typeId == View3DInventor::getClassTypeId()) {
 
-        QtGLWidget* shareWidget = nullptr;
+        QOpenGLWidget* shareWidget = nullptr;
         // VBO rendering doesn't work correctly when we don't share the OpenGL widgets
         if (!theViews.empty()) {
             auto firstView = static_cast<View3DInventor*>(theViews.front());
-            shareWidget = qobject_cast<QtGLWidget*>(firstView->getViewer()->getGLWidget());
+            shareWidget = qobject_cast<QOpenGLWidget*>(firstView->getViewer()->getGLWidget());
 
             const char *ppReturn = nullptr;
             firstView->onMsg("GetCamera",&ppReturn);
@@ -2473,11 +2483,11 @@ void Document::setActiveWindow(Gui::MDIView* view)
     std::list<MDIView*> mdis = getMDIViews();
 
     // this document is not active
-    if (std::find(mdis.begin(), mdis.end(), active) == mdis.end())
+    if (std::ranges::find(mdis, active) == mdis.end())
         return;
 
     // the view is not part of the document
-    if (std::find(mdis.begin(), mdis.end(), view) == mdis.end())
+    if (std::ranges::find(mdis, view) == mdis.end())
         return;
 
     getMainWindow()->setActiveWindow(view);
